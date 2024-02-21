@@ -12,7 +12,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 find_package(imgui REQUIRED)
 find_package(imgui-neditor REQUIRED)
 
-add_executable(neditor neditor.cc)
+file(GLOB_RECURSE SRCS neditor/*.cc)
+add_executable(neditor ${SRCS})
 target_link_libraries(neditor imgui imgui-neditor)
-
+target_include_directories(neditor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
