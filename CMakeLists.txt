@@ -10,8 +10,9 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -rdynamic -fno-omit-fram
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 find_package(imgui REQUIRED)
+find_package(imgui-neditor REQUIRED)
 
 add_executable(neditor neditor.cc)
-target_link_libraries(neditor imgui)
+target_link_libraries(neditor imgui imgui-neditor)
 
 

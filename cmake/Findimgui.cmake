@@ -1,3 +1,7 @@
+if(imgui-proj_POPULATED)
+    return()
+endif()
+
 find_package(glfw3 REQUIRED)
 
 include(FetchContent)
