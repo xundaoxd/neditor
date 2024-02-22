@@ -14,9 +14,6 @@ static void glfw_error_callback(int error, const char *description) {
 }
 
 void DoDraw() {
-  static ImNodes::Ez::Context *context = ImNodes::Ez::CreateContext();
-  IM_UNUSED(context);
-
   if (ImGui::Begin("ImNodes", nullptr,
                    ImGuiWindowFlags_NoScrollbar |
                        ImGuiWindowFlags_NoScrollWithMouse)) {
@@ -78,6 +75,8 @@ int main(int argc, char *argv[]) {
   ImGui_ImplGlfw_InitForOpenGL(window, true);
   ImGui_ImplOpenGL3_Init();
 
+  auto imnodes_ctx = ImNodes::Ez::CreateContext();
+
   while (!glfwWindowShouldClose(window)) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -103,6 +102,8 @@ int main(int argc, char *argv[]) {
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
+
+  ImNodes::Ez::FreeContext(imnodes_ctx);
 
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
