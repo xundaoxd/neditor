@@ -11,6 +11,13 @@ static void glfw_error_callback(int error, const char *description) {
   fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
+void DoDraw() {
+  // TODO: draw all elems
+  ImGui::Begin("demo");
+  ImGui::Text("demo");
+  ImGui::End();
+}
+
 int main(int argc, char *argv[]) {
   (void)argc;
   (void)argv;
@@ -48,10 +55,7 @@ int main(int argc, char *argv[]) {
     ImGui::SetNextWindowSize(
         ImVec2(width, height)); // ensures ImGui fits the GLFW window
 
-    // TODO: draw all elems
-    ImGui::Begin("demo");
-    ImGui::Text("demo");
-    ImGui::End();
+    DoDraw();
 
     ImGui::Render();
     int display_w, display_h;
