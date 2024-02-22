@@ -1,5 +1,4 @@
 #include <cstdio>
-#include <iostream>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -7,14 +6,49 @@
 
 #include "GLFW/glfw3.h" // Will drag system OpenGL headers
 
+#include "neditor/ImNodes.h"
+#include "neditor/ImNodesEz.h"
+
 static void glfw_error_callback(int error, const char *description) {
   fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
 void DoDraw() {
-  // TODO: draw all elems
-  ImGui::Begin("demo");
-  ImGui::Text("demo");
+  static ImNodes::Ez::Context *context = ImNodes::Ez::CreateContext();
+  IM_UNUSED(context);
+
+  if (ImGui::Begin("ImNodes", nullptr,
+                   ImGuiWindowFlags_NoScrollbar |
+                       ImGuiWindowFlags_NoScrollWithMouse)) {
+    ImNodes::Ez::BeginCanvas();
+
+    struct Node {
+      ImVec2 pos{};
+      bool selected{};
+      ImNodes::Ez::SlotInfo inputs[1];
+      ImNodes::Ez::SlotInfo outputs[1];
+    };
+
+    static Node nodes[3] = {
+        {{50, 100}, false, {{"In", 1}}, {{"Out", 1}}},
+        {{250, 50}, false, {{"In", 1}}, {{"Out", 1}}},
+        {{250, 100}, false, {{"In", 1}}, {{"Out", 1}}},
+    };
+
+    for (Node &node : nodes) {
+      if (ImNodes::Ez::BeginNode(&node, "Node Title", &node.pos,
+                                 &node.selected)) {
+        ImNodes::Ez::InputSlots(node.inputs, 1);
+        ImNodes::Ez::OutputSlots(node.outputs, 1);
+        ImNodes::Ez::EndNode();
+      }
+    }
+
+    ImNodes::Connection(&nodes[1], "In", &nodes[0], "Out");
+    ImNodes::Connection(&nodes[2], "In", &nodes[0], "Out");
+
+    ImNodes::Ez::EndCanvas();
+  }
   ImGui::End();
 }
 
