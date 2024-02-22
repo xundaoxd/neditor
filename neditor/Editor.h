@@ -11,6 +11,11 @@ inline ImVec2 operator-(const ImVec2 &a, const ImVec2 &b) {
   return ImVec2(a.x - b.x, a.y - b.y);
 }
 
+inline std::ostream &operator<<(std::ostream &os, const ImVec2 &point) {
+  os << "ImVec2{x=" << point.x << ", y=" << point.y << "}";
+  return os;
+}
+
 class NodeEditor {
 public:
   void DrawMenuBar() {
