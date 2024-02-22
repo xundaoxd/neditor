@@ -1,16 +1,14 @@
-#include <cstdio>
-
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
 #include "GLFW/glfw3.h" // Will drag system OpenGL headers
 
+#include "Editor.h"
+
 static void glfw_error_callback(int error, const char *description) {
   fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
-
-void DoDraw() { ImGui::ShowDemoWindow(); }
 
 int main(int argc, char *argv[]) {
   (void)argc;
@@ -40,6 +38,8 @@ int main(int argc, char *argv[]) {
     ImGui_ImplOpenGL3_Init();
   }
 
+  NodeEditor editor;
+
   while (!glfwWindowShouldClose(window)) {
     {
       ImGui_ImplOpenGL3_NewFrame();
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
           ImVec2(width, height)); // ensures ImGui fits the GLFW window
     }
 
-    DoDraw();
+    editor.Draw();
 
     ImGui::Render();
     int display_w, display_h;
