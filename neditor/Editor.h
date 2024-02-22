@@ -2,6 +2,14 @@
 #include <iostream>
 
 #include "imgui.h"
+#include "imgui_internal.h"
+
+inline ImVec2 operator+(const ImVec2 &a, const ImVec2 &b) {
+  return ImVec2(a.x + b.x, a.y + b.y);
+}
+inline ImVec2 operator-(const ImVec2 &a, const ImVec2 &b) {
+  return ImVec2(a.x - b.x, a.y - b.y);
+}
 
 class NodeEditor {
 public:
@@ -34,11 +42,14 @@ public:
       ImGui::EndPopup();
     }
   }
+
   void Draw() {
     ImGui::Begin("neditor", nullptr,
                  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_MenuBar);
+
     DrawMenuBar();
     DrawPopup();
+
     ImGui::End();
   }
 };
