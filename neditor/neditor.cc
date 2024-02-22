@@ -31,8 +31,9 @@ int main(int argc, char *argv[]) {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
-  io.ConfigFlags |=
-      ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_NavEnableGamepad;
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard |
+                    ImGuiConfigFlags_NavEnableGamepad |
+                    ImGuiConfigFlags_DockingEnable;
   ImGui_ImplGlfw_InitForOpenGL(window, true);
   ImGui_ImplOpenGL3_Init();
 
@@ -40,9 +41,26 @@ int main(int argc, char *argv[]) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-    ImGui::ShowDemoWindow(); // Show demo window! :)
+
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    ImGui::SetNextWindowSize(
+        ImVec2(width, height)); // ensures ImGui fits the GLFW window
+
+    // TODO: draw all elems
+    ImGui::Begin("demo");
+    ImGui::Text("demo");
+    ImGui::End();
 
     ImGui::Render();
+    int display_w, display_h;
+    glfwGetFramebufferSize(window, &display_w, &display_h);
+    glViewport(0, 0, display_w, display_h);
+    static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w,
+                 clear_color.z * clear_color.w, clear_color.w);
+    glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     glfwSwapBuffers(window);
     glfwPollEvents();

@@ -8,7 +8,7 @@ include(FetchContent)
 
 FetchContent_Declare(imgui-proj
     GIT_REPOSITORY      https://github.com/ocornut/imgui.git
-    GIT_TAG             master
+    GIT_TAG             docking
 )
 FetchContent_Populate(imgui-proj)
 
