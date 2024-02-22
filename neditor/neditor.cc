@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <iostream>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -36,8 +37,6 @@ int main(int argc, char *argv[]) {
   ImGui_ImplOpenGL3_Init();
 
   while (!glfwWindowShouldClose(window)) {
-    glfwPollEvents();
-
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
@@ -45,8 +44,8 @@ int main(int argc, char *argv[]) {
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
     glfwSwapBuffers(window);
+    glfwPollEvents();
   }
 
   ImGui_ImplOpenGL3_Shutdown();
