@@ -48,7 +48,7 @@ public:
     }
   }
 
-  void Draw() {
+  void DrawLoop() {
     ImGui::Begin("neditor", nullptr,
                  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_MenuBar);
 

@@ -47,14 +47,13 @@ int main(int argc, char *argv[]) {
       ImGui::NewFrame();
     }
     {
-      ImGui::SetNextWindowPos(ImVec2(0, 0));
       int width, height;
       glfwGetWindowSize(window, &width, &height);
-      ImGui::SetNextWindowSize(
-          ImVec2(width, height)); // ensures ImGui fits the GLFW window
+      ImGui::SetNextWindowPos(ImVec2(0, 0));
+      ImGui::SetNextWindowSize(ImVec2(width, height));
     }
 
-    editor.Draw();
+    editor.DrawLoop();
 
     ImGui::Render();
     int display_w, display_h;
