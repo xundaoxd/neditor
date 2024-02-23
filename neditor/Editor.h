@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 #include <iostream>
 #include <vector>
 
@@ -23,7 +24,7 @@ struct Node {
 };
 
 class NodeEditor {
-  Node node{"demo", {}, {}};
+  ImVec2 scrolling{0, 0};
 
 public:
   void DrawMenuBar() {
@@ -57,40 +58,36 @@ public:
   }
 
   void DrawCanvas() {
-    // static ImVector<ImVec2> points;
-    // static bool adding_line = false;
-    //
-    // ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();
-    // ImVec2 canvas_p1 = canvas_p0 + ImGui::GetContentRegionAvail();
-    //
-    // ImGuiIO &io = ImGui::GetIO();
-    // ImDrawList *draw_list = ImGui::GetWindowDrawList();
-    //
-    // draw_list->AddRectFilled(canvas_p0, canvas_p1, IM_COL32(50, 50, 50,
-    // 255)); draw_list->AddRect(canvas_p0, canvas_p1, IM_COL32(255, 255, 255,
-    // 255));
-    //
-    // ImGui::InvisibleButton("## canvas", canvas_p1 - canvas_p0,
-    //                        ImGuiButtonFlags_MouseButtonLeft |
-    //                            ImGuiButtonFlags_MouseButtonRight);
-    // ImVec2 mouse_pos_in_canvas = io.MousePos - canvas_p0;
-    // if (ImGui::IsItemHovered() && !adding_line &&
-    //     ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-    //   points.push_back(mouse_pos_in_canvas);
-    //   points.push_back(mouse_pos_in_canvas);
-    //   adding_line = true;
-    // }
-    // if (adding_line) {
-    //   points.back() = mouse_pos_in_canvas;
-    //   if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
-    //     adding_line = false;
-    // }
-    // for (int n = 0; n < points.Size; n += 2)
-    //   draw_list->AddLine(canvas_p0 + points[n], canvas_p0 + points[n + 1],
-    //                      IM_COL32(255, 255, 0, 255), 2.0f);
-    // if (ImGui::IsMouseDragging(0)) {
-    //   std::cout << io.MouseDelta << std::endl;
-    // }
+    ImGuiIO &io = ImGui::GetIO();
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    ImVec2 canvas_sz = ImGui::GetContentRegionAvail();
+    ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();
+    ImVec2 canvas_p1 = canvas_p0 + canvas_sz;
+
+    ImGui::InvisibleButton("## canvas", canvas_p1 - canvas_p0,
+                           ImGuiButtonFlags_MouseButtonLeft |
+                               ImGuiButtonFlags_MouseButtonRight);
+    if (ImGui::IsItemActive() &&
+        ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+      scrolling = scrolling + io.MouseDelta;
+    }
+
+    draw_list->AddRectFilled(canvas_p0, canvas_p1, IM_COL32(50, 50, 50, 255));
+    draw_list->AddRect(canvas_p0, canvas_p1, IM_COL32(255, 255, 255, 255));
+
+    {
+      const float GRID_STEP = 64.0f;
+      for (float x = fmodf(scrolling.x, GRID_STEP); x < canvas_sz.x;
+           x += GRID_STEP)
+        draw_list->AddLine(ImVec2(canvas_p0.x + x, canvas_p0.y),
+                           ImVec2(canvas_p0.x + x, canvas_p1.y),
+                           IM_COL32(200, 200, 200, 40));
+      for (float y = fmodf(scrolling.y, GRID_STEP); y < canvas_sz.y;
+           y += GRID_STEP)
+        draw_list->AddLine(ImVec2(canvas_p0.x, canvas_p0.y + y),
+                           ImVec2(canvas_p1.x, canvas_p0.y + y),
+                           IM_COL32(200, 200, 200, 40));
+    }
     // TODO: impl
   }
 
@@ -122,6 +119,8 @@ public:
     DrawCanvas();
     DrawNodes();
     DrawConns();
+
+    ImGui::ShowDemoWindow();
 
     ImGui::End();
   }
