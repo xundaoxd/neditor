@@ -1,8 +1,8 @@
 #pragma once
 #include <iostream>
+#include <vector>
 
 #include "imgui.h"
-#include "imgui_internal.h"
 
 inline ImVec2 operator+(const ImVec2 &a, const ImVec2 &b) {
   return ImVec2(a.x + b.x, a.y + b.y);
@@ -16,7 +16,15 @@ inline std::ostream &operator<<(std::ostream &os, const ImVec2 &point) {
   return os;
 }
 
+struct Node {
+  std::string title;
+  std::vector<std::string> in_slots;
+  std::vector<std::string> out_slots;
+};
+
 class NodeEditor {
+  Node node{"demo", {}, {}};
+
 public:
   void DrawMenuBar() {
     if (ImGui::BeginMenuBar()) {
@@ -48,12 +56,72 @@ public:
     }
   }
 
+  void DrawCanvas() {
+    // static ImVector<ImVec2> points;
+    // static bool adding_line = false;
+    //
+    // ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();
+    // ImVec2 canvas_p1 = canvas_p0 + ImGui::GetContentRegionAvail();
+    //
+    // ImGuiIO &io = ImGui::GetIO();
+    // ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    //
+    // draw_list->AddRectFilled(canvas_p0, canvas_p1, IM_COL32(50, 50, 50,
+    // 255)); draw_list->AddRect(canvas_p0, canvas_p1, IM_COL32(255, 255, 255,
+    // 255));
+    //
+    // ImGui::InvisibleButton("## canvas", canvas_p1 - canvas_p0,
+    //                        ImGuiButtonFlags_MouseButtonLeft |
+    //                            ImGuiButtonFlags_MouseButtonRight);
+    // ImVec2 mouse_pos_in_canvas = io.MousePos - canvas_p0;
+    // if (ImGui::IsItemHovered() && !adding_line &&
+    //     ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+    //   points.push_back(mouse_pos_in_canvas);
+    //   points.push_back(mouse_pos_in_canvas);
+    //   adding_line = true;
+    // }
+    // if (adding_line) {
+    //   points.back() = mouse_pos_in_canvas;
+    //   if (!ImGui::IsMouseDown(ImGuiMouseButton_Left))
+    //     adding_line = false;
+    // }
+    // for (int n = 0; n < points.Size; n += 2)
+    //   draw_list->AddLine(canvas_p0 + points[n], canvas_p0 + points[n + 1],
+    //                      IM_COL32(255, 255, 0, 255), 2.0f);
+    // if (ImGui::IsMouseDragging(0)) {
+    //   std::cout << io.MouseDelta << std::endl;
+    // }
+    // TODO: impl
+  }
+
+  // void DrawDrag() {
+  //   static ImVec2 pos{100, 100};
+  //   ImGui::SetCursorPos(pos);
+  //   ImGui::Button("demo");
+  //   ImGuiIO &io = ImGui::GetIO();
+  //   if (ImGui::IsItemActive() && ImGui::IsMouseDragging(0)) {
+  //     pos = pos + io.MouseDelta;
+  //   }
+  // }
+
+  void DrawNodes() {
+    // TODO: impl
+  }
+
+  void DrawConns() {
+    // TODO: impl
+  }
+
   void DrawLoop() {
     ImGui::Begin("neditor", nullptr,
                  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_MenuBar);
 
     DrawMenuBar();
     DrawPopup();
+
+    DrawCanvas();
+    DrawNodes();
+    DrawConns();
 
     ImGui::End();
   }
