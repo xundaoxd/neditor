@@ -98,32 +98,47 @@ public:
     // draw title end
 
     // draw slots
-    auto slots_p0 = cur_pos;
+    auto slots_p0 = cur_pos + ImVec2{padding, padding};
     // draw in slots
-    auto islots_p0 = cur_pos + ImVec2{padding, 0};
+    auto islots_p0 = slots_p0;
     auto islot_p0 = islots_p0;
     float islots_width = title_sz.x;
     ImVec2 radio_sz;
     for (auto &slot : node->islots) {
-      islot_p0 += ImVec2{0, padding};
       ImGui::SetCursorPos(islot_p0);
       ImGui::PushID(&slot);
       ImGui::RadioButton("##", false);
+      ImGui::PopID();
       if (ImGui::IsItemActive() &&
           ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
         std::cout << "radio released" << std::endl;
         // TODO: impl
       }
-      ImGui::PopID();
       radio_sz = ImGui::GetItemRectSize();
       auto text_sz =
           ImGui::CalcTextSize(slot.c_str(), slot.c_str() + slot.size());
       islots_width = std::max(islots_width, radio_sz.x + text_sz.x);
       draw_list->AddText(islot_p0 + ImVec2{radio_sz.x, 0}, col, slot.c_str(),
                          slot.c_str() + slot.size());
-      islot_p0 += ImVec2{0, radio_sz.y};
+      islot_p0 += ImVec2{0, radio_sz.y + padding};
     }
-    auto islots_p1 = islot_p0 + ImVec2{islots_width, padding};
+
+    ImVec2 bt_sz;
+    {
+      // draw new bt
+      ImGui::SetCursorPos(islot_p0);
+      ImGui::PushID(&node->islots);
+      ImGui::Button("New");
+      ImGui::PopID();
+      if (ImGui::IsItemActive() &&
+          ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+        node->islots.emplace_back("Slot");
+      }
+      bt_sz = ImGui::GetItemRectSize();
+      islots_width = std::max(islots_width, bt_sz.x);
+      islot_p0 += ImVec2{0, bt_sz.y};
+    }
+    auto islots_p1 = islot_p0 + ImVec2{islots_width, 0};
     draw_list->AddRect(islots_p0, islots_p1, col);
     // draw in slots end
     // draw out slots
@@ -137,32 +152,43 @@ public:
         islots_p0 + ImVec2{islots_width + padding * 2 + oslots_width, 0};
     auto oslot_p0 = oslots_p0;
     for (auto &slot : node->oslots) {
-      oslot_p0 += ImVec2{0, padding};
       auto radio_p0 = oslot_p0 - ImVec2{radio_sz.x, 0};
       ImGui::SetCursorPos(radio_p0);
       ImGui::PushID(&slot);
       ImGui::RadioButton("##", false);
+      ImGui::PopID();
       if (ImGui::IsItemActive() &&
           ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
         std::cout << "radio clicked" << std::endl;
         // TODO: impl
       }
-      ImGui::PopID();
       auto text_sz =
           ImGui::CalcTextSize(slot.c_str(), slot.c_str() + slot.size());
       auto text_p0 = radio_p0 - ImVec2{text_sz.x, 0};
       draw_list->AddText(text_p0, col, slot.c_str(),
                          slot.c_str() + slot.size());
-      oslot_p0 += ImVec2{0, radio_sz.y};
+      oslot_p0 += ImVec2{0, radio_sz.y + padding};
     }
-    auto oslots_p1 = oslot_p0 + ImVec2{0, padding};
+    {
+      // draw new
+      auto bt_p0 = oslot_p0 - ImVec2{bt_sz.x, 0};
+      ImGui::SetCursorPos(bt_p0);
+      ImGui::PushID(&node->oslots);
+      ImGui::Button("New");
+      ImGui::PopID();
+      if (ImGui::IsItemActive() &&
+          ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+        node->oslots.emplace_back("Slot");
+      }
+      oslot_p0 += ImVec2{0, bt_sz.y};
+    }
+    auto oslots_p1 = oslot_p0;
     draw_list->AddRect(oslots_p0 - ImVec2{oslots_width, 0}, oslots_p1, col);
     // draw out slots end
-    auto slots_p1 = oslots_p1 + ImVec2{padding, 0};
+    auto slots_p1 = ImVec2{oslots_p1.x, std::max(oslots_p1.y, islots_p1.y)};
     draw_list->AddRect(slots_p0, slots_p1, col);
     // draw slots end
-    auto node_p1 = slots_p1;
-    draw_list->AddRect(node_p0, node_p1, col, rounding);
+    auto node_p1 = slots_p1 + ImVec2{padding, padding};
 
     // draw header
     auto header_p1 = oslots_p0 + ImVec2{padding, 0};
@@ -171,12 +197,14 @@ public:
     ImGui::PushID(&node->title);
     ImGui::InvisibleButton("##", header_p1 - header_p0,
                            ImGuiButtonFlags_MouseButtonLeft);
+    ImGui::PopID();
     if (ImGui::IsItemActive() &&
         ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
       node->pos += io.MouseDelta;
     }
-    ImGui::PopID();
     // draw header end
+
+    draw_list->AddRect(node_p0, node_p1, col, rounding);
   }
 
   void DrawNodes() {
