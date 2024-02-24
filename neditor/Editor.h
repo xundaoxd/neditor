@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <numeric>
+#include <utility>
 #include <vector>
 
 #include "imgui.h"
@@ -41,10 +42,20 @@ class NodeEditor {
     std::vector<ImVec2> islots_pos;
     std::vector<ImVec2> oslots_pos;
 
+    void AppendIslot(std::string slot) {
+      islots.emplace_back(std::move(slot));
+      islots_pos.resize(islots.size());
+    }
+    void AppendOslot(std::string slot) {
+      oslots.emplace_back(std::move(slot));
+      oslots_pos.resize(oslots.size());
+    }
+
     Node(ImVec2 pos, std::string title, std::vector<std::string> islots = {},
          std::vector<std::string> oslots = {})
         : pos(std::move(pos)), title(std::move(title)),
-          islots(std::move(islots)), oslots(std::move(oslots)) {}
+          islots(std::move(islots)), oslots(std::move(oslots)),
+          islots_pos(this->islots.size()), oslots_pos(this->oslots.size()) {}
   };
 
   std::vector<Node> nodes{
@@ -52,8 +63,11 @@ class NodeEditor {
       {{200, 200}, "demo", {"in0", "in1"}, {"out0", "out1", "out2"}}};
 
   bool in_linking{false};
-  ImVec2 link_src;
-  ImVec2 link_dst;
+  std::pair<Node *, std::size_t> link_src;
+
+  std::vector<
+      std::pair<std::pair<Node *, std::size_t>, std::pair<Node *, std::size_t>>>
+      conns;
 
 public:
   void DrawMenuBar() {
@@ -95,10 +109,9 @@ public:
     draw_list->AddBezierCubic(p1, p2, p3, p4, col, thickness);
   }
 
-  void DrawNode(Node *node) {
+  void DrawNode(Node *node, ImU32 col = IM_COL32(255, 255, 255, 255)) {
     ImGuiIO &io = ImGui::GetIO();
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
-    ImU32 col = IM_COL32(255, 255, 255, 255);
 
     auto node_p0 = node->pos;
     auto cur_pos = node_p0;
@@ -120,7 +133,8 @@ public:
     auto islot_p0 = islots_p0;
     float islots_width = title_sz.x;
     ImVec2 radio_sz;
-    for (auto &slot : node->islots) {
+    for (std::size_t i = 0; i < node->islots.size(); i++) {
+      auto &slot = node->islots[i];
       ImGui::SetCursorPos(islot_p0);
       ImGui::PushID(&slot);
       ImGui::RadioButton("##", false);
@@ -128,12 +142,12 @@ public:
       if (ImGui::IsItemHovered() &&
           ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
         if (in_linking) {
-          // TODO: impl
-          link_dst = ImGui::GetMousePos();
+          conns.emplace_back(link_src, std::make_pair(node, i));
           in_linking = false;
         }
       }
       radio_sz = ImGui::GetItemRectSize();
+      node->islots_pos[i] = islot_p0 + ImVec2{radio_sz.x / 2, radio_sz.y / 2};
       auto text_sz =
           ImGui::CalcTextSize(slot.c_str(), slot.c_str() + slot.size());
       islots_width = std::max(islots_width, radio_sz.x + text_sz.x);
@@ -151,7 +165,7 @@ public:
       ImGui::PopID();
       if (ImGui::IsItemActive() &&
           ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-        node->islots.emplace_back("Slot");
+        node->AppendIslot("Slot");
       }
       bt_sz = ImGui::GetItemRectSize();
       islots_width = std::max(islots_width, bt_sz.x);
@@ -170,16 +184,17 @@ public:
     auto oslots_p0 =
         islots_p0 + ImVec2{islots_width + padding * 2 + oslots_width, 0};
     auto oslot_p0 = oslots_p0;
-    for (auto &slot : node->oslots) {
+    for (std::size_t i = 0; i < node->oslots.size(); i++) {
+      auto &slot = node->oslots[i];
       auto radio_p0 = oslot_p0 - ImVec2{radio_sz.x, 0};
+      node->oslots_pos[i] = radio_p0 + ImVec2{radio_sz.x / 2, radio_sz.y / 2};
       ImGui::SetCursorPos(radio_p0);
       ImGui::PushID(&slot);
       ImGui::RadioButton("##", false);
       ImGui::PopID();
       if (ImGui::IsItemActive() &&
           ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-        link_src = radio_p0 + ImVec2{radio_sz.x / 2, radio_sz.y / 2};
-        link_dst = link_src;
+        link_src = std::make_pair(node, i);
         in_linking = true;
       }
       auto text_sz =
@@ -198,7 +213,7 @@ public:
       ImGui::PopID();
       if (ImGui::IsItemActive() &&
           ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-        node->oslots.emplace_back("Slot");
+        node->AppendOslot("Slot");
       }
       oslot_p0 += ImVec2{0, bt_sz.y};
     }
@@ -225,22 +240,31 @@ public:
     // draw header end
 
     draw_list->AddRect(node_p0, node_p1, col, rounding);
-
-    if (in_linking) {
-      link_dst = ImGui::GetMousePos();
-      DrawBezierCubic(link_src, link_dst, col);
-      if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-        in_linking = false;
-      }
-    }
   }
 
   void DrawNodes() {
+    ImU32 col = IM_COL32(255, 255, 255, 255);
     for (auto &node : nodes) {
-      DrawNode(&node);
+      DrawNode(&node, col);
+    }
+    if (in_linking) {
+      if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+        in_linking = false;
+      } else {
+        DrawBezierCubic(link_src.first->oslots_pos[link_src.second],
+                        ImGui::GetMousePos(), col);
+      }
     }
   }
-  void DrawConns() {}
+  void DrawConns() {
+    for (auto &conn : conns) {
+      auto &link_src = conn.first;
+      auto &link_dst = conn.second;
+      auto p0 = link_src.first->oslots_pos[link_src.second];
+      auto p1 = link_dst.first->islots_pos[link_dst.second];
+      DrawBezierCubic(p0, p1);
+    }
+  }
 
   void DrawLoop() {
     ImGui::Begin("neditor", nullptr,
@@ -250,7 +274,7 @@ public:
     DrawPopup();
 
     DrawNodes();
-    // DrawConns();
+    DrawConns();
 
     ImGui::End();
   }
