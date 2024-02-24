@@ -139,7 +139,7 @@ public:
       islot_p0 += ImVec2{0, bt_sz.y};
     }
     auto islots_p1 = islot_p0 + ImVec2{islots_width, 0};
-    draw_list->AddRect(islots_p0, islots_p1, col);
+    // draw_list->AddRect(islots_p0, islots_p1, col);
     // draw in slots end
     // draw out slots
     float oslots_width = 0;
@@ -183,10 +183,10 @@ public:
       oslot_p0 += ImVec2{0, bt_sz.y};
     }
     auto oslots_p1 = oslot_p0;
-    draw_list->AddRect(oslots_p0 - ImVec2{oslots_width, 0}, oslots_p1, col);
+    // draw_list->AddRect(oslots_p0 - ImVec2{oslots_width, 0}, oslots_p1, col);
     // draw out slots end
     auto slots_p1 = ImVec2{oslots_p1.x, std::max(oslots_p1.y, islots_p1.y)};
-    draw_list->AddRect(slots_p0, slots_p1, col);
+    // draw_list->AddRect(slots_p0, slots_p1, col);
     // draw slots end
     auto node_p1 = slots_p1 + ImVec2{padding, padding};
 
