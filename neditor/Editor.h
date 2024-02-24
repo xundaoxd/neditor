@@ -38,6 +38,9 @@ class NodeEditor {
     std::vector<std::string> islots;
     std::vector<std::string> oslots;
 
+    std::vector<ImVec2> islots_pos;
+    std::vector<ImVec2> oslots_pos;
+
     Node(ImVec2 pos, std::string title, std::vector<std::string> islots = {},
          std::vector<std::string> oslots = {})
         : pos(std::move(pos)), title(std::move(title)),
@@ -47,6 +50,10 @@ class NodeEditor {
   std::vector<Node> nodes{
       {{100, 100}, "demo", {"in0", "in1"}, {"out0", "out1", "out2"}},
       {{200, 200}, "demo", {"in0", "in1"}, {"out0", "out1", "out2"}}};
+
+  bool in_linking{false};
+  ImVec2 link_src;
+  ImVec2 link_dst;
 
 public:
   void DrawMenuBar() {
@@ -79,6 +86,15 @@ public:
     }
   }
 
+  void DrawBezierCubic(ImVec2 p1, ImVec2 p4,
+                       ImU32 col = IM_COL32(255, 255, 255, 255),
+                       float thickness = 1) {
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    auto p2 = p1 + ImVec2{(p4.x - p1.x) * 0.6f, 0};
+    auto p3 = p4 - ImVec2{(p4.x - p1.x) * 0.6f, 0};
+    draw_list->AddBezierCubic(p1, p2, p3, p4, col, thickness);
+  }
+
   void DrawNode(Node *node) {
     ImGuiIO &io = ImGui::GetIO();
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
@@ -109,10 +125,13 @@ public:
       ImGui::PushID(&slot);
       ImGui::RadioButton("##", false);
       ImGui::PopID();
-      if (ImGui::IsItemActive() &&
-          ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-        std::cout << "radio released" << std::endl;
-        // TODO: impl
+      if (ImGui::IsItemHovered() &&
+          ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+        if (in_linking) {
+          // TODO: impl
+          link_dst = ImGui::GetMousePos();
+          in_linking = false;
+        }
       }
       radio_sz = ImGui::GetItemRectSize();
       auto text_sz =
@@ -159,8 +178,9 @@ public:
       ImGui::PopID();
       if (ImGui::IsItemActive() &&
           ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-        std::cout << "radio clicked" << std::endl;
-        // TODO: impl
+        link_src = radio_p0 + ImVec2{radio_sz.x / 2, radio_sz.y / 2};
+        link_dst = link_src;
+        in_linking = true;
       }
       auto text_sz =
           ImGui::CalcTextSize(slot.c_str(), slot.c_str() + slot.size());
@@ -205,6 +225,14 @@ public:
     // draw header end
 
     draw_list->AddRect(node_p0, node_p1, col, rounding);
+
+    if (in_linking) {
+      link_dst = ImGui::GetMousePos();
+      DrawBezierCubic(link_src, link_dst, col);
+      if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+        in_linking = false;
+      }
+    }
   }
 
   void DrawNodes() {
