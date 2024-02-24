@@ -80,6 +80,12 @@ class NodeEditor {
                 conns.end());
   }
 
+  bool in_editing{false};
+  Node *node_editing;
+  int target_editing; // 0 for title, 1 for islot, 2 for oslot
+  std::size_t slot_editing;
+  char editing_buf[64];
+
 public:
   void DrawMenuBar() {
     if (ImGui::BeginMenuBar()) {
@@ -132,8 +138,28 @@ public:
     auto title_sz = ImGui::CalcTextSize(
         node->title.c_str(), node->title.c_str() + node->title.size());
     auto title_p0 = cur_pos + ImVec2{padding, padding};
-    draw_list->AddText(title_p0, col, node->title.c_str(),
-                       node->title.c_str() + node->title.size());
+    if (in_editing && node_editing == node && target_editing == 0) {
+      ImGui::SetCursorPos(title_p0);
+      ImGui::PushID(node);
+      if (ImGui::InputText("##", editing_buf, sizeof(editing_buf),
+                           ImGuiInputTextFlags_EnterReturnsTrue)) {
+        in_editing = false;
+        node->title = editing_buf;
+      }
+      ImGui::PopID();
+    } else {
+      draw_list->AddText(title_p0, col, node->title.c_str(),
+                         node->title.c_str() + node->title.size());
+      ImGui::SetCursorPos(title_p0);
+      ImGui::InvisibleButton("##", title_sz, ImGuiButtonFlags_MouseButtonLeft);
+      if (ImGui::IsItemHovered() &&
+          ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+        strncpy(editing_buf, node->title.c_str(), sizeof(editing_buf));
+        in_editing = true;
+        node_editing = node;
+        target_editing = 0;
+      }
+    }
     cur_pos += ImVec2{0, padding * 2 + title_sz.y};
     // draw title end
 
@@ -167,8 +193,30 @@ public:
       auto text_sz =
           ImGui::CalcTextSize(slot.c_str(), slot.c_str() + slot.size());
       islots_width = std::max(islots_width, radio_sz.x + text_sz.x);
-      draw_list->AddText(islot_p0 + ImVec2{radio_sz.x, 0}, col, slot.c_str(),
-                         slot.c_str() + slot.size());
+      if (in_editing && node_editing == node && target_editing == 1 &&
+          slot_editing == i) {
+        ImGui::SetCursorPos(islot_p0 + ImVec2{radio_sz.x, 0});
+        ImGui::PushID(node);
+        if (ImGui::InputText("##", editing_buf, sizeof(editing_buf),
+                             ImGuiInputTextFlags_EnterReturnsTrue)) {
+          in_editing = false;
+          slot = editing_buf;
+        }
+        ImGui::PopID();
+      } else {
+        draw_list->AddText(islot_p0 + ImVec2{radio_sz.x, 0}, col, slot.c_str(),
+                           slot.c_str() + slot.size());
+        ImGui::SetCursorPos(islot_p0 + ImVec2{radio_sz.x, 0});
+        ImGui::InvisibleButton("##", text_sz, ImGuiButtonFlags_MouseButtonLeft);
+        if (ImGui::IsItemHovered() &&
+            ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+          strncpy(editing_buf, slot.c_str(), sizeof(editing_buf));
+          in_editing = true;
+          node_editing = node;
+          target_editing = 1;
+          slot_editing = i;
+        }
+      }
       islot_p0 += ImVec2{0, radio_sz.y + padding};
     }
 
@@ -216,8 +264,32 @@ public:
       auto text_sz =
           ImGui::CalcTextSize(slot.c_str(), slot.c_str() + slot.size());
       auto text_p0 = radio_p0 - ImVec2{text_sz.x, 0};
-      draw_list->AddText(text_p0, col, slot.c_str(),
-                         slot.c_str() + slot.size());
+
+      if (in_editing && node_editing == node && target_editing == 2 &&
+          slot_editing == i) {
+        ImGui::SetCursorPos(text_p0);
+        ImGui::PushID(node);
+        if (ImGui::InputText("##", editing_buf, sizeof(editing_buf),
+                             ImGuiInputTextFlags_EnterReturnsTrue)) {
+          in_editing = false;
+          slot = editing_buf;
+        }
+        ImGui::PopID();
+      } else {
+        draw_list->AddText(text_p0, col, slot.c_str(),
+                           slot.c_str() + slot.size());
+        ImGui::SetCursorPos(text_p0);
+        ImGui::InvisibleButton("##", text_sz, ImGuiButtonFlags_MouseButtonLeft);
+        if (ImGui::IsItemHovered() &&
+            ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+          strncpy(editing_buf, slot.c_str(), sizeof(editing_buf));
+          in_editing = true;
+          node_editing = node;
+          target_editing = 2;
+          slot_editing = i;
+        }
+      }
+
       oslot_p0 += ImVec2{0, radio_sz.y + padding};
     }
     {
