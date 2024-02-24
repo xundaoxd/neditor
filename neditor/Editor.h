@@ -13,47 +13,32 @@ inline ImVec2 operator+(const ImVec2 &a, const ImVec2 &b) {
 inline ImVec2 operator-(const ImVec2 &a, const ImVec2 &b) {
   return ImVec2(a.x - b.x, a.y - b.y);
 }
+inline ImVec2 &operator+=(ImVec2 &a, const ImVec2 &b) {
+  a = a + b;
+  return a;
+}
+inline ImVec2 &operator-=(ImVec2 &a, const ImVec2 &b) {
+  a = a - b;
+  return a;
+}
 
 inline std::ostream &operator<<(std::ostream &os, const ImVec2 &point) {
   os << "ImVec2{x=" << point.x << ", y=" << point.y << "}";
   return os;
 }
 
-struct Node {
-  std::string title;
-  std::vector<std::string> in_slots;
-  std::vector<std::string> out_slots;
-
-  Node(std::string title, std::vector<std::string> in_slots,
-       std::vector<std::string> out_slots)
-      : title(std::move(title)), in_slots(std::move(in_slots)),
-        out_slots(std::move(out_slots)) {}
-
-  Node(std::string title) : Node(std::move(title), {}, {}) {}
-};
-
 class NodeEditor {
   static constexpr float padding = 6;
   static constexpr float mark = 6;
 
-  struct NodeP {
-    std::unique_ptr<Node> node{nullptr};
-    ImVec2 pos{0, 0};
-
-    NodeP(std::unique_ptr<Node> node, ImVec2 pos)
-        : node(std::move(node)), pos(std::move(pos)) {}
+  struct Node {
+    ImVec2 pos;
+    std::string title;
   };
 
-  ImVec2 scrolling{0, 0};
-  std::vector<NodeP> nodes;
+  std::vector<Node> nodes;
 
 public:
-  NodeEditor() {
-    // TODO: test data
-    nodes.emplace_back(std::make_unique<Node>("demo"), ImVec2{100, 100});
-    nodes.back().node->in_slots = {"in0", "in1"};
-    nodes.back().node->out_slots = {"out0", "out1"};
-  }
   void DrawMenuBar() {
     if (ImGui::BeginMenuBar()) {
       if (ImGui::BeginMenu("File")) {
@@ -77,100 +62,38 @@ public:
   void DrawPopup() {
     if (ImGui::BeginPopupContextWindow()) {
       if (ImGui::MenuItem("New Node")) {
-        // TODO:
-        std::cout << "New Node" << std::endl;
+        nodes.emplace_back(Node{ImGui::GetMousePos(), "NewNode"});
       }
       ImGui::EndPopup();
     }
   }
 
-  void DrawCanvas() {
+  void DrawNodes() {
     ImGuiIO &io = ImGui::GetIO();
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
-    ImVec2 canvas_sz = ImGui::GetContentRegionAvail();
-    ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();
-    ImVec2 canvas_p1 = canvas_p0 + canvas_sz;
 
-    ImGui::InvisibleButton("## canvas", canvas_p1 - canvas_p0,
-                           ImGuiButtonFlags_MouseButtonLeft |
-                               ImGuiButtonFlags_MouseButtonRight);
-    if (ImGui::IsItemActive() &&
-        ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
-      scrolling = scrolling + io.MouseDelta;
-    }
-
-    draw_list->AddRectFilled(canvas_p0, canvas_p1, IM_COL32(50, 50, 50, 255));
-    draw_list->AddRect(canvas_p0, canvas_p1, IM_COL32(255, 255, 255, 255));
-
-    {
-      const float GRID_STEP = 64.0f;
-      for (float x = fmodf(scrolling.x, GRID_STEP); x < canvas_sz.x;
-           x += GRID_STEP)
-        draw_list->AddLine(ImVec2(canvas_p0.x + x, canvas_p0.y),
-                           ImVec2(canvas_p0.x + x, canvas_p1.y),
-                           IM_COL32(200, 200, 200, 40));
-      for (float y = fmodf(scrolling.y, GRID_STEP); y < canvas_sz.y;
-           y += GRID_STEP)
-        draw_list->AddLine(ImVec2(canvas_p0.x, canvas_p0.y + y),
-                           ImVec2(canvas_p1.x, canvas_p0.y + y),
-                           IM_COL32(200, 200, 200, 40));
-    }
-    // TODO: impl
-  }
-
-  // void DrawDrag() {
-  //   static ImVec2 pos{100, 100};
-  //   ImGui::SetCursorPos(pos);
-  //   ImGui::Button("demo");
-  //   ImGuiIO &io = ImGui::GetIO();
-  //   if (ImGui::IsItemActive() && ImGui::IsMouseDragging(0)) {
-  //     pos = pos + io.MouseDelta;
-  //   }
-  // }
-
-  // | <---padding---> elem <---padding--->|
-  void DrawNodes() {
-    // ImGuiIO &io = ImGui::GetIO();
-    ImDrawList *draw_list = ImGui::GetWindowDrawList();
-    ImU32 white_col = ImGui::GetColorU32(IM_COL32(255, 255, 255, 255));
+    auto white_col = IM_COL32(255, 255, 255, 255);
 
     for (auto &node : nodes) {
-      ImVec2 node_p0 = node.pos;
-      ImVec2 cur_p0 = node_p0;
+      auto &title = node.title;
+      auto size =
+          ImGui::CalcTextSize(title.c_str(), title.c_str() + title.size());
+      auto cur_p0 = node.pos;
+      auto cur_p1 = cur_p0 + size + ImVec2{padding * 2, padding * 2};
+      draw_list->AddText(cur_p0 + ImVec2{padding, padding}, white_col,
+                         title.c_str(), title.c_str() + title.size());
+      draw_list->AddRect(cur_p0, cur_p1, white_col);
 
-      cur_p0 = cur_p0 + ImVec2{0, padding};
-      {
-        // draw title
-        ImVec2 title_sz = ImGui::CalcTextSize(node.node->title.c_str(),
-                                              node.node->title.c_str() +
-                                                  node.node->title.size());
-        ImVec2 title_p0 = cur_p0 + ImVec2{padding, padding};
-        ImVec2 title_p1 = title_p0 + title_sz;
-        draw_list->AddText(title_p0, white_col, node.node->title.c_str(),
-                           node.node->title.c_str() + node.node->title.size());
-
-        cur_p0 = ImVec2{cur_p0.x, title_p1.y};
+      ImGui::SetCursorPos(node.pos);
+      ImGui::InvisibleButton("## node", cur_p1 - cur_p0,
+                             ImGuiButtonFlags_MouseButtonLeft);
+      if (ImGui::IsItemActive() &&
+          ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+        node.pos += io.MouseDelta;
       }
-      {
-        // draw seperator
-        cur_p0 = cur_p0 + ImVec2{0, 10};
-      }
-      {
-        // draw slots
-        // |<---padding---> islot <---2 * padding---> oslot <---padding--->|
-        // islot: |mark <---padding---> slot|
-        // oslot: |slot <---padding---> mark|
-      }
-      {
-        // draw outline
-      }
-      // TODO: impl
     }
   }
-
-  void DrawConns() {
-    // TODO: impl
-  }
+  void DrawConns() {}
 
   void DrawLoop() {
     ImGui::Begin("neditor", nullptr,
@@ -179,11 +102,8 @@ public:
     DrawMenuBar();
     DrawPopup();
 
-    DrawCanvas();
     DrawNodes();
     DrawConns();
-
-    // ImGui::ShowDemoWindow();
 
     ImGui::End();
   }
