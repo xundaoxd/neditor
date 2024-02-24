@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <memory>
@@ -44,30 +45,40 @@ class NodeEditor {
 
     void AppendIslot(std::string slot) {
       islots.emplace_back(std::move(slot));
-      islots_pos.resize(islots.size());
+      islots_pos.emplace_back(0, 0);
     }
     void AppendOslot(std::string slot) {
       oslots.emplace_back(std::move(slot));
-      oslots_pos.resize(oslots.size());
+      oslots_pos.emplace_back(0, 0);
     }
 
     Node(ImVec2 pos, std::string title, std::vector<std::string> islots = {},
          std::vector<std::string> oslots = {})
         : pos(std::move(pos)), title(std::move(title)),
           islots(std::move(islots)), oslots(std::move(oslots)),
-          islots_pos(this->islots.size()), oslots_pos(this->oslots.size()) {}
+          islots_pos(this->islots.size(), ImVec2{0, 0}),
+          oslots_pos(this->oslots.size(), ImVec2{0, 0}) {}
   };
 
   std::vector<Node> nodes{
       {{100, 100}, "demo", {"in0", "in1"}, {"out0", "out1", "out2"}},
       {{200, 200}, "demo", {"in0", "in1"}, {"out0", "out1", "out2"}}};
 
-  bool in_linking{false};
-  std::pair<Node *, std::size_t> link_src;
-
   std::vector<
       std::pair<std::pair<Node *, std::size_t>, std::pair<Node *, std::size_t>>>
       conns;
+
+  bool in_linking{false};
+  std::pair<Node *, std::size_t> link_src;
+
+  void Unlink(Node *node, std::size_t idx) {
+    conns.erase(std::remove_if(conns.begin(), conns.end(),
+                               [=](auto &item) {
+                                 return item.second ==
+                                        std::make_pair(node, idx);
+                               }),
+                conns.end());
+  }
 
 public:
   void DrawMenuBar() {
@@ -139,9 +150,14 @@ public:
       ImGui::PushID(&slot);
       ImGui::RadioButton("##", false);
       ImGui::PopID();
+      if (ImGui::IsItemActive() &&
+          ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+        Unlink(node, i);
+      }
       if (ImGui::IsItemHovered() &&
           ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
         if (in_linking) {
+          Unlink(node, i);
           conns.emplace_back(link_src, std::make_pair(node, i));
           in_linking = false;
         }
