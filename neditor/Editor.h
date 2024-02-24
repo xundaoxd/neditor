@@ -71,6 +71,12 @@ class NodeEditor {
   bool in_linking{false};
   std::pair<Node *, std::size_t> link_src;
 
+  void Link(Node *src_node, std::size_t src_idx, Node *dst_node,
+            std::size_t dst_idx) {
+    conns.emplace_back(std::make_pair(std::make_pair(src_node, src_idx),
+                                      std::make_pair(dst_node, dst_idx)));
+  }
+
   void Unlink(Node *node, std::size_t idx) {
     conns.erase(std::remove_if(conns.begin(), conns.end(),
                                [=](auto &item) {
@@ -184,7 +190,7 @@ public:
           ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
         if (in_linking) {
           Unlink(node, i);
-          conns.emplace_back(link_src, std::make_pair(node, i));
+          Link(link_src.first, link_src.second, node, i);
           in_linking = false;
         }
       }
