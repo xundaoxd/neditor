@@ -13,10 +13,6 @@
 #include "common.h"
 
 class Node {
-  static constexpr float padding = 6;
-
-  static Node *selected_node;
-
   struct Slot {
     std::string name;
     ImVec2 pos;
@@ -27,6 +23,11 @@ class Node {
         : name(std::move(name)), pos(std::move(pos)) {}
     Slot(std::string name) : Slot(std::move(name), {0, 0}) {}
   };
+  static constexpr float padding = 6;
+
+  static Node *selected_node;
+  static bool is_linking;
+  static Slot *src_slot;
 
   ImVec2 pos;
 
@@ -44,6 +45,16 @@ public:
   }
   const Slot &GetOslot(std::size_t idx) const {
     return *std::next(oslots.begin(), idx);
+  }
+
+  void UnLinkIslot(Slot *slot) {
+    for (Slot *peer : slot->links) {
+      peer->links.erase(
+          std::remove_if(peer->links.begin(), peer->links.end(),
+                         [slot](Slot *item) { return item == slot; }),
+          peer->links.end());
+    }
+    slot->links.clear();
   }
 
   bool IsSlotLinked(const Slot *slot) const { return slot->links.size(); }
@@ -71,6 +82,19 @@ public:
 
     ImGui::SetCursorScreenPos(pos);
     ImGui::RadioButton("##", IsSlotLinked(&slot));
+    if (ImGui::IsItemHovered() &&
+        ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+      if (is_linking) {
+        UnLinkIslot(&slot);
+        src_slot->links.emplace_back(&slot);
+        slot.links.emplace_back(src_slot);
+        is_linking = false;
+      }
+    }
+    if (ImGui::IsItemHovered() &&
+        ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+      UnLinkIslot(&slot);
+    }
     radio_sz = ImGui::GetItemRectSize();
     ImVec2 size = ImGui::CalcTextSize(slot.name.c_str(),
                                       slot.name.c_str() + slot.name.size());
@@ -86,6 +110,11 @@ public:
 
     ImGui::SetCursorScreenPos(pos - ImVec2{radio_sz.x, 0});
     ImGui::RadioButton("##", IsSlotLinked(&slot));
+    if (ImGui::IsItemHovered() &&
+        ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+      src_slot = &slot;
+      is_linking = true;
+    }
     ImVec2 size = ImGui::CalcTextSize(slot.name.c_str(),
                                       slot.name.c_str() + slot.name.size());
     draw_list->AddText(pos - ImVec2{radio_sz.x + size.x, 0}, col,
@@ -212,6 +241,18 @@ public:
       }
     }
   }
+  static void FinishUpdate();
 };
 
 inline Node *Node::selected_node{nullptr};
+inline bool Node::is_linking{false};
+inline Node::Slot *Node::src_slot;
+
+inline void Node::FinishUpdate() {
+  if (Node::is_linking) {
+    DrawBezierCubic(Node::src_slot->pos, ImGui::GetMousePos());
+    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+      Node::is_linking = false;
+    }
+  }
+}

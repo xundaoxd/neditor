@@ -87,6 +87,7 @@ public:
     UpdateMenu();
     UpdateConns();
     UpdateNodes();
+    Node::FinishUpdate();
     ImGui::End();
   }
   void Render() {
