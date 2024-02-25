@@ -48,7 +48,7 @@ public:
       if (ImGui::BeginMenu("Edit")) {
         if (ImGui::MenuItem("New Node")) {
           const ImGuiViewport *main_viewport = ImGui::GetMainViewport();
-          nodes.emplace_back(main_viewport->WorkPos - main_viewport->Pos);
+          nodes.emplace_back(main_viewport->WorkPos);
         }
         ImGui::EndMenu();
       }
