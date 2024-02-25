@@ -21,8 +21,6 @@ class NodeImpl {
 
   std::vector<std::pair<NodeImpl *, std::size_t>> links;
 
-  bool is_select{false};
-
   bool IsIslotLinked(std::size_t idx) { return false; }
   bool IsOslotLinked(std::size_t idx) { return false; }
 
