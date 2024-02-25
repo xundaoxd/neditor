@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -11,6 +12,9 @@
 
 #include "common.h"
 
+class NodeImpl;
+inline static NodeImpl *selected_node{nullptr};
+
 class NodeImpl {
   static constexpr float padding = 6;
 
@@ -20,13 +24,43 @@ class NodeImpl {
   std::vector<std::string> islots{"demo", "asd"};
   std::vector<std::string> oslots{"asd", "123"};
 
-  std::unordered_map<std::string, std::pair<NodeImpl *, std::size_t>> ilinks;
-  std::unordered_map<std::string,
+  std::unordered_map<std::size_t, std::pair<NodeImpl *, std::size_t>> ilinks;
+  std::unordered_map<std::size_t,
                      std::vector<std::pair<NodeImpl *, std::size_t>>>
       olinks;
 
-  bool IsIslotLinked(std::size_t idx) { return ilinks.count(islots[idx]); }
-  bool IsOslotLinked(std::size_t idx) { return olinks[oslots[idx]].size(); }
+public:
+  NodeImpl(ImVec2 pos) : pos(pos), title("NewNode") {}
+
+  bool IsSelected() const { return this == selected_node; }
+  bool IsIslotLinked(std::size_t idx) { return ilinks.count(idx); }
+  bool IsOslotLinked(std::size_t idx) { return olinks[idx].size(); }
+
+  void UnLinkI(std::size_t idx) {
+    if (ilinks.count(idx)) {
+      NodeImpl *peer = ilinks[idx].first;
+      peer->olinks[ilinks[idx].second].erase(
+          std::remove_if(peer->olinks[ilinks[idx].second].begin(),
+                         peer->olinks[ilinks[idx].second].end(),
+                         [=](auto &item) {
+                           return item.first == this && item.second == idx;
+                         }),
+          peer->olinks[ilinks[idx].second].end());
+
+      ilinks.erase(idx);
+    }
+  }
+  void UnLinkO(std::size_t idx) {
+    for (auto &peer : olinks[idx]) {
+      peer.first->ilinks.erase(peer.second);
+    }
+    olinks.erase(idx);
+  }
+  void LinkTo(std::size_t idx, NodeImpl *peer, std::size_t pidx) {
+    peer->UnLinkI(pidx);
+    olinks[idx].emplace_back(peer, pidx);
+    peer->ilinks[pidx] = std::make_pair(this, idx);
+  }
 
   ImVec2 UpdateTitle(ImVec2 pos, ImU32 col = IM_COL32(255, 255, 255, 255)) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
@@ -108,9 +142,6 @@ class NodeImpl {
     return pos - islots_p0;
   }
 
-public:
-  NodeImpl(ImVec2 pos) : pos(pos), title("NewNode") {}
-
   void Update(ImU32 col = IM_COL32(255, 255, 255, 255)) {
     ImGuiIO &io = ImGui::GetIO();
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
@@ -148,14 +179,26 @@ public:
     auto header_p1_padding = ImVec2{node_p1_padding.x, title_p1_padding.y};
     draw_list->AddLine(ImVec2{header_p0_padding.x, title_p1_padding.y},
                        header_p1_padding, col);
-    ImGui::SetCursorScreenPos(header_p0_padding);
-    ImGui::PushID(&title);
-    ImGui::InvisibleButton("##", header_p1_padding - header_p0_padding,
-                           ImGuiButtonFlags_MouseButtonLeft);
-    ImGui::PopID();
-    if (ImGui::IsItemActive() &&
-        ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-      pos += io.MouseDelta;
+
+    {
+      ImGui::SetCursorScreenPos(header_p0_padding);
+      ImGui::PushID(&title);
+      ImGui::InvisibleButton("##", header_p1_padding - header_p0_padding,
+                             ImGuiButtonFlags_MouseButtonLeft);
+      ImGui::PopID();
+      if (ImGui::IsItemHovered()) {
+        draw_list->AddRectFilled(header_p0_padding, header_p1_padding,
+                                 (col & ~(0xff << IM_COL32_A_SHIFT)) |
+                                     (50 << IM_COL32_A_SHIFT));
+      }
+      if (ImGui::IsItemActive() &&
+          ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+        pos += io.MouseDelta;
+      }
+      if (ImGui::IsItemActive() &&
+          ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+        selected_node = this;
+      }
     }
   }
 };
