@@ -1,5 +1,5 @@
 #pragma once
-#include <vector>
+#include <list>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -13,7 +13,7 @@
 class NodeEditor {
   GLFWwindow *window;
 
-  std::vector<Node> nodes;
+  std::list<Node> nodes;
 
 public:
   void Init(GLFWwindow *window, const char *glsl_version) {
@@ -58,9 +58,14 @@ public:
       ImGui::EndMainMenuBar();
     }
   }
+  void UpdateConns() {
+    for (auto &node : nodes) {
+      node.UpdateLinks();
+    }
+  }
   void UpdateNodes() {
     for (auto &node : nodes) {
-      node.Update();
+      node.UpdateNode();
     }
   }
   void Update() {
@@ -80,6 +85,7 @@ public:
 
     ImGui::Begin("neditor", nullptr, window_flags);
     UpdateMenu();
+    UpdateConns();
     UpdateNodes();
     ImGui::End();
   }

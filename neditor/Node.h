@@ -2,65 +2,59 @@
 
 #include <algorithm>
 #include <iostream>
+#include <list>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
-#include <vector>
 
 #include "imgui.h"
 
 #include "common.h"
 
-class NodeImpl;
-inline static NodeImpl *selected_node{nullptr};
-
-class NodeImpl {
+class Node {
   static constexpr float padding = 6;
+
+  static Node *selected_node;
+
+  struct Slot {
+    std::string name;
+    ImVec2 pos;
+
+    std::list<Slot *> links;
+
+    Slot(std::string name, ImVec2 pos)
+        : name(std::move(name)), pos(std::move(pos)) {}
+    Slot(std::string name) : Slot(std::move(name), {0, 0}) {}
+  };
 
   ImVec2 pos;
 
   std::string title;
-  std::vector<std::string> islots{"demo", "asd"};
-  std::vector<std::string> oslots{"asd", "123"};
-
-  std::unordered_map<std::size_t, std::pair<NodeImpl *, std::size_t>> ilinks;
-  std::unordered_map<std::size_t,
-                     std::vector<std::pair<NodeImpl *, std::size_t>>>
-      olinks;
+  std::list<Slot> islots{{"demo"}, {"asd"}};
+  std::list<Slot> oslots{{"asd"}, {"123"}};
 
 public:
-  NodeImpl(ImVec2 pos) : pos(pos), title("NewNode") {}
+  Node(ImVec2 pos) : pos(pos), title("NewNode") {}
 
-  bool IsSelected() const { return this == selected_node; }
-  bool IsIslotLinked(std::size_t idx) { return ilinks.count(idx); }
-  bool IsOslotLinked(std::size_t idx) { return olinks[idx].size(); }
+  Slot &GetIslot(std::size_t idx) { return *std::next(islots.begin(), idx); }
+  Slot &GetOslot(std::size_t idx) { return *std::next(oslots.begin(), idx); }
+  const Slot &GetIslot(std::size_t idx) const {
+    return *std::next(islots.begin(), idx);
+  }
+  const Slot &GetOslot(std::size_t idx) const {
+    return *std::next(oslots.begin(), idx);
+  }
 
-  void UnLinkI(std::size_t idx) {
-    if (ilinks.count(idx)) {
-      NodeImpl *peer = ilinks[idx].first;
-      peer->olinks[ilinks[idx].second].erase(
-          std::remove_if(peer->olinks[ilinks[idx].second].begin(),
-                         peer->olinks[ilinks[idx].second].end(),
-                         [=](auto &item) {
-                           return item.first == this && item.second == idx;
-                         }),
-          peer->olinks[ilinks[idx].second].end());
+  bool IsSlotLinked(const Slot *slot) const { return slot->links.size(); }
+  bool IsIslotLinked(std::size_t idx) const {
+    return GetIslot(idx).links.size();
+  }
+  bool IsOslotLinked(std::size_t idx) const {
+    return GetOslot(idx).links.size();
+  }
 
-      ilinks.erase(idx);
-    }
-  }
-  void UnLinkO(std::size_t idx) {
-    for (auto &peer : olinks[idx]) {
-      peer.first->ilinks.erase(peer.second);
-    }
-    olinks.erase(idx);
-  }
-  void LinkTo(std::size_t idx, NodeImpl *peer, std::size_t pidx) {
-    peer->UnLinkI(pidx);
-    olinks[idx].emplace_back(peer, pidx);
-    peer->ilinks[pidx] = std::make_pair(this, idx);
-  }
+  bool IsSelected() const { return this == Node ::selected_node; }
 
   ImVec2 UpdateTitle(ImVec2 pos, ImU32 col = IM_COL32(255, 255, 255, 255)) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
@@ -70,40 +64,59 @@ public:
     return size;
   }
 
+  ImVec2 UpdateIslot(ImVec2 pos, std::size_t idx, ImVec2 &radio_sz,
+                     ImU32 col = IM_COL32(255, 255, 255, 255)) {
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    Slot &slot = GetIslot(idx);
+
+    ImGui::SetCursorScreenPos(pos);
+    ImGui::RadioButton("##", IsSlotLinked(&slot));
+    radio_sz = ImGui::GetItemRectSize();
+    ImVec2 size = ImGui::CalcTextSize(slot.name.c_str(),
+                                      slot.name.c_str() + slot.name.size());
+    draw_list->AddText(pos + ImVec2{radio_sz.x, 0}, col, slot.name.c_str(),
+                       slot.name.c_str() + slot.name.size());
+    slot.pos = pos + ImVec2{radio_sz.x / 2, radio_sz.y / 2};
+    return ImVec2{radio_sz.x + size.x, std::max(radio_sz.y, size.y)};
+  }
+  ImVec2 UpdateOslot(ImVec2 pos, std::size_t idx, ImVec2 &radio_sz,
+                     ImU32 col = IM_COL32(255, 255, 255, 255)) {
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    Slot &slot = GetOslot(idx);
+
+    ImGui::SetCursorScreenPos(pos - ImVec2{radio_sz.x, 0});
+    ImGui::RadioButton("##", IsSlotLinked(&slot));
+    ImVec2 size = ImGui::CalcTextSize(slot.name.c_str(),
+                                      slot.name.c_str() + slot.name.size());
+    draw_list->AddText(pos - ImVec2{radio_sz.x + size.x, 0}, col,
+                       slot.name.c_str(), slot.name.c_str() + slot.name.size());
+    slot.pos = pos + ImVec2{-radio_sz.x / 2, radio_sz.y / 2};
+    return ImVec2{size.x + radio_sz.x, std::max(size.y, radio_sz.y)};
+  }
+
   ImVec2 UpdateIslots(ImVec2 pos, ImVec2 &radio_sz,
                       ImU32 col = IM_COL32(255, 255, 255, 255)) {
     if (islots.empty()) {
       return {0, 0};
     }
-
-    ImDrawList *draw_list = ImGui::GetWindowDrawList();
     auto islots_p0 = pos;
-
     float max_w = 0;
-    ImGui::SetCursorScreenPos(pos);
-    ImGui::RadioButton("##", IsIslotLinked(0));
-    radio_sz = ImGui::GetItemRectSize();
-    ImVec2 size = ImGui::CalcTextSize(islots[0].c_str(),
-                                      islots[0].c_str() + islots[0].size());
-    max_w = std::max(max_w, size.x);
-    draw_list->AddText(pos + ImVec2{radio_sz.x, 0}, col, islots[0].c_str(),
-                       islots[0].c_str() + islots[0].size());
 
-    pos += ImVec2{0, std::max(radio_sz.y, size.y)};
+    auto islot_sz = UpdateIslot(pos, 0, radio_sz, col);
+    max_w = std::max(max_w, islot_sz.x);
+    pos += ImVec2{0, islot_sz.y};
+
     for (std::size_t i = 1; i < islots.size(); i++) {
       pos += ImVec2{0, padding};
-      ImGui::SetCursorScreenPos(pos);
-      ImGui::RadioButton("##", IsIslotLinked(i));
-      ImVec2 size = ImGui::CalcTextSize(islots[i].c_str(),
-                                        islots[i].c_str() + islots[i].size());
-      max_w = std::max(max_w, size.x);
-      draw_list->AddText(pos + ImVec2{radio_sz.x, 0}, col, islots[i].c_str(),
-                         islots[i].c_str() + islots[i].size());
-      pos += ImVec2{0, std::max(radio_sz.y, size.y)};
+
+      auto islot_sz = UpdateIslot(pos, i, radio_sz, col);
+      max_w = std::max(max_w, islot_sz.x);
+      pos += ImVec2{0, islot_sz.y};
     }
-    auto islots_p1 = pos + ImVec2{radio_sz.x + max_w, 0};
+    auto islots_p1 = pos + ImVec2{max_w, 0};
     return islots_p1 - islots_p0;
   }
+
   ImVec2 UpdateOslots(ImVec2 pos, ImVec2 radio_sz,
                       ImU32 col = IM_COL32(255, 255, 255, 255)) {
     if (oslots.empty()) {
@@ -112,37 +125,35 @@ public:
 
     float max_w = 0;
     for (auto &slot : oslots) {
-      ImVec2 size =
-          ImGui::CalcTextSize(slot.c_str(), slot.c_str() + slot.size());
-      max_w = std::max(max_w, size.x);
+      ImVec2 size = ImGui::CalcTextSize(slot.name.c_str(),
+                                        slot.name.c_str() + slot.name.size());
+      max_w = std::max(max_w, size.x + radio_sz.x);
     }
 
-    ImDrawList *draw_list = ImGui::GetWindowDrawList();
-    auto islots_p0 = pos;
-    pos += ImVec2{max_w + radio_sz.x, 0};
-    ImGui::SetCursorScreenPos(pos - ImVec2{radio_sz.x, 0});
-    ImGui::RadioButton("##", IsOslotLinked(0));
-    ImVec2 size = ImGui::CalcTextSize(oslots[0].c_str(),
-                                      oslots[0].c_str() + oslots[0].size());
-    draw_list->AddText(pos - ImVec2{radio_sz.x + size.x, 0}, col,
-                       oslots[0].c_str(), oslots[0].c_str() + oslots[0].size());
-    pos += ImVec2{0, std::max(radio_sz.y, size.y)};
+    auto oslots_p0 = pos;
+    pos += ImVec2{max_w, 0};
+
+    auto oslot_sz = UpdateOslot(pos, 0, radio_sz, col);
+    pos += ImVec2{0, oslot_sz.y};
 
     for (std::size_t i = 1; i < oslots.size(); i++) {
       pos += ImVec2{0, padding};
-      ImGui::SetCursorScreenPos(pos - ImVec2{radio_sz.x, 0});
-      ImGui::RadioButton("##", IsOslotLinked(i));
-      ImVec2 size = ImGui::CalcTextSize(oslots[i].c_str(),
-                                        oslots[i].c_str() + oslots[i].size());
-      draw_list->AddText(pos - ImVec2{radio_sz.x + size.x, 0}, col,
-                         oslots[i].c_str(),
-                         oslots[i].c_str() + oslots[i].size());
-      pos += ImVec2{0, std::max(radio_sz.y, size.y)};
+
+      auto oslot_sz = UpdateOslot(pos, i, radio_sz, col);
+      pos += ImVec2{0, oslot_sz.y};
     }
-    return pos - islots_p0;
+    return pos - oslots_p0;
   }
 
-  void Update(ImU32 col = IM_COL32(255, 255, 255, 255)) {
+  void UpdateLinks() {
+    for (auto &slot : islots) {
+      for (auto &src : slot.links) {
+        DrawBezierCubic(src->pos, slot.pos);
+      }
+    }
+  }
+
+  void UpdateNode(ImU32 col = IM_COL32(255, 255, 255, 255)) {
     ImGuiIO &io = ImGui::GetIO();
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
 
@@ -203,11 +214,4 @@ public:
   }
 };
 
-class Node {
-  std::unique_ptr<NodeImpl> impl;
-
-public:
-  Node(ImVec2 pos) : impl(std::make_unique<NodeImpl>(pos)) {}
-
-  void Update() { impl->Update(); }
-};
+inline Node *Node::selected_node{nullptr};
