@@ -1,17 +1,21 @@
 #pragma once
-#include <iostream>
+#include <vector>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "imgui_internal.h"
 
 #include <GLFW/glfw3.h>
 
+#include "Node.h"
 #include "common.h"
 
 class NodeEditor {
   GLFWwindow *window;
+
+  ImVec2 node_pos;
+
+  std::vector<Node> nodes;
 
 public:
   void Init(GLFWwindow *window, const char *glsl_version) {
@@ -30,7 +34,7 @@ public:
     if (ImGui::BeginMainMenuBar()) {
       if (ImGui::BeginMenu("File")) {
         if (ImGui::MenuItem("New")) {
-          // TODO: impl
+          nodes.clear();
         }
         if (ImGui::MenuItem("Load")) {
           // TODO: impl
@@ -42,7 +46,7 @@ public:
       }
       if (ImGui::BeginMenu("Edit")) {
         if (ImGui::MenuItem("New Node")) {
-          // TODO: impl
+          nodes.emplace_back(node_pos);
         }
         ImGui::EndMenu();
       }
@@ -55,8 +59,10 @@ public:
       ImGui::EndMainMenuBar();
     }
   }
-  void UpdateNode() {
-    // TODO: impl
+  void UpdateNodes() {
+    for (auto &node : nodes) {
+      node.Update();
+    }
   }
   void Update() {
     ImGui_ImplOpenGL3_NewFrame();
@@ -64,8 +70,8 @@ public:
     ImGui::NewFrame();
 
     const ImGuiViewport *main_viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(main_viewport->WorkPos, ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(main_viewport->WorkSize, ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(main_viewport->WorkPos);
+    ImGui::SetNextWindowSize(main_viewport->WorkSize);
 
     ImGuiWindowFlags window_flags =
         ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar;
@@ -74,8 +80,10 @@ public:
     window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
 
     ImGui::Begin("neditor", nullptr, window_flags);
+    const ImGuiViewport *window_viewport = ImGui::GetWindowViewport();
+    node_pos = window_viewport->WorkPos + main_viewport->WorkPos;
     UpdateMenu();
-    UpdateNode();
+    UpdateNodes();
     ImGui::End();
   }
   void Render() {
