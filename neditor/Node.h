@@ -12,7 +12,7 @@
 
 #include "common.h"
 
-class Node {
+struct Node {
   struct Slot {
     std::string name;
     ImVec2 pos;
@@ -35,7 +35,6 @@ class Node {
   std::list<Slot> islots{{"demo"}, {"asd"}};
   std::list<Slot> oslots{{"asd"}, {"123"}};
 
-public:
   Node(ImVec2 pos) : pos(pos), title("NewNode") {}
 
   Slot &GetIslot(std::size_t idx) { return *std::next(islots.begin(), idx); }

@@ -15,6 +15,9 @@ class NodeEditor {
 
   std::list<Node> nodes;
 
+  bool property_view{false};
+  Node *current_node{nullptr};
+
 public:
   void Init(GLFWwindow *window, const char *glsl_version) {
     this->window = window;
@@ -50,12 +53,24 @@ public:
         ImGui::EndMenu();
       }
       if (ImGui::BeginMenu("View")) {
-        if (ImGui::MenuItem("Toggle Property")) {
-          // TODO: impl
+        if (ImGui::MenuItem("Property")) {
+          property_view = !property_view;
         }
         ImGui::EndMenu();
       }
       ImGui::EndMainMenuBar();
+    }
+  }
+  void UpdatePropertyView() {
+    if (property_view) {
+      ImGui::Begin("PropertyView");
+      // TODO: impl
+      if (current_node) {
+        ImGui::TextUnformatted(current_node->title.c_str(),
+                               current_node->title.c_str() +
+                                   current_node->title.size());
+      }
+      ImGui::End();
     }
   }
   void UpdateConns() {
@@ -66,6 +81,9 @@ public:
   void UpdateNodes() {
     for (auto &node : nodes) {
       node.UpdateNode();
+      if (node.IsSelected()) {
+        current_node = &node;
+      }
     }
   }
   void Update() {
@@ -85,6 +103,7 @@ public:
 
     ImGui::Begin("neditor", nullptr, window_flags);
     UpdateMenu();
+    UpdatePropertyView();
     UpdateConns();
     UpdateNodes();
     Node::FinishUpdate();
