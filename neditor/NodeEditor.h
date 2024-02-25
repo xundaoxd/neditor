@@ -4,18 +4,21 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "imgui_internal.h"
 
 #include <GLFW/glfw3.h>
 
 #include "Node.h"
+#include "NodeProperty.h"
 #include "common.h"
 
 class NodeEditor {
   GLFWwindow *window;
 
   std::list<Node> nodes;
+  NodeProperty nproperty;
 
-  bool property_view{false};
+  bool property_view{true};
   Node *current_node{nullptr};
 
 public:
@@ -61,18 +64,6 @@ public:
       ImGui::EndMainMenuBar();
     }
   }
-  void UpdatePropertyView() {
-    if (property_view) {
-      ImGui::Begin("PropertyView");
-      // TODO: impl
-      if (current_node) {
-        ImGui::TextUnformatted(current_node->title.c_str(),
-                               current_node->title.c_str() +
-                                   current_node->title.size());
-      }
-      ImGui::End();
-    }
-  }
   void UpdateConns() {
     for (auto &node : nodes) {
       node.UpdateLinks();
@@ -85,6 +76,26 @@ public:
         current_node = &node;
       }
     }
+  }
+  void DoDockSplit() {
+    ImGuiID dockspace_id = ImGui::GetID("neditor dock");
+    if (ImGui::DockBuilderGetNode(dockspace_id) == nullptr) {
+      ImGui::DockBuilderRemoveNode(dockspace_id);
+      ImGui::DockBuilderAddNode(dockspace_id,
+                                ImGuiDockNodeFlags_PassthruCentralNode |
+                                    ImGuiDockNodeFlags_DockSpace);
+      ImGui::DockBuilderSetNodeSize(dockspace_id,
+                                    ImGui::GetMainViewport()->WorkSize);
+      ImGuiID dock_left, dock_right;
+      ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Right, 0.2f,
+                                  &dock_right, &dock_left);
+      ImGui::DockBuilderDockWindow("node graph", dock_left);
+      ImGui::DockBuilderDockWindow("PropertyView", dock_right);
+
+      ImGui::DockBuilderFinish(dockspace_id);
+    }
+    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f),
+                     ImGuiDockNodeFlags_PassthruCentralNode);
   }
   void Update() {
     ImGui_ImplOpenGL3_NewFrame();
@@ -101,13 +112,32 @@ public:
     window_flags |=
         ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     ImGui::Begin("neditor", nullptr, window_flags);
+    ImGui::PopStyleVar(3);
+
+    DoDockSplit();
+
+    ImGui::End();
+
+    ImGuiWindowClass window_class;
+    window_class.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar;
+    ImGui::SetNextWindowClass(&window_class);
+    ImGui::Begin("node graph");
     UpdateMenu();
-    UpdatePropertyView();
     UpdateConns();
     UpdateNodes();
     Node::FinishUpdate();
     ImGui::End();
+
+    if (property_view) {
+      ImGui::Begin("PropertyView");
+      nproperty.Update(current_node);
+      ImGui::End();
+    }
+    // ImGui::ShowDemoWindow();
   }
   void Render() {
     ImGui::Render();

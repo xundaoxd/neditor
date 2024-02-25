@@ -22,6 +22,16 @@ struct Node {
     Slot(std::string name, ImVec2 pos)
         : name(std::move(name)), pos(std::move(pos)) {}
     Slot(std::string name) : Slot(std::move(name), {0, 0}) {}
+
+    void UnLink() {
+      for (Slot *peer : links) {
+        peer->links.erase(
+            std::remove_if(peer->links.begin(), peer->links.end(),
+                           [this](Slot *item) { return item == this; }),
+            peer->links.end());
+      }
+      links.clear();
+    }
   };
   static constexpr float padding = 6;
 
@@ -32,8 +42,8 @@ struct Node {
   ImVec2 pos;
 
   std::string title;
-  std::list<Slot> islots{{"demo"}, {"asd"}};
-  std::list<Slot> oslots{{"asd"}, {"123"}};
+  std::list<Slot> islots;
+  std::list<Slot> oslots;
 
   Node(ImVec2 pos) : pos(pos), title("NewNode") {}
 
@@ -46,16 +56,6 @@ struct Node {
     return *std::next(oslots.begin(), idx);
   }
 
-  void UnLinkIslot(Slot *slot) {
-    for (Slot *peer : slot->links) {
-      peer->links.erase(
-          std::remove_if(peer->links.begin(), peer->links.end(),
-                         [slot](Slot *item) { return item == slot; }),
-          peer->links.end());
-    }
-    slot->links.clear();
-  }
-
   bool IsSlotLinked(const Slot *slot) const { return slot->links.size(); }
   bool IsIslotLinked(std::size_t idx) const {
     return GetIslot(idx).links.size();
@@ -65,6 +65,15 @@ struct Node {
   }
 
   bool IsSelected() const { return this == Node ::selected_node; }
+
+  void UnLink() {
+    for (auto &slot : islots) {
+      slot.UnLink();
+    }
+    for (auto &slot : oslots) {
+      slot.UnLink();
+    }
+  }
 
   ImVec2 UpdateTitle(ImVec2 pos, ImU32 col = IM_COL32(255, 255, 255, 255)) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
@@ -84,7 +93,7 @@ struct Node {
     if (ImGui::IsItemHovered() &&
         ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
       if (is_linking) {
-        UnLinkIslot(&slot);
+        slot.UnLink();
         src_slot->links.emplace_back(&slot);
         slot.links.emplace_back(src_slot);
         is_linking = false;
@@ -92,7 +101,7 @@ struct Node {
     }
     if (ImGui::IsItemHovered() &&
         ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
-      UnLinkIslot(&slot);
+      slot.UnLink();
     }
     radio_sz = ImGui::GetItemRectSize();
     ImVec2 size = ImGui::CalcTextSize(slot.name.c_str(),
