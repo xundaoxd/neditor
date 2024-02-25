@@ -1,6 +1,5 @@
 #pragma once
 #include <iostream>
-#include <ostream>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -47,8 +46,17 @@ public:
         }
         ImGui::EndMenu();
       }
+      if (ImGui::BeginMenu("View")) {
+        if (ImGui::MenuItem("Toggle Property")) {
+          // TODO: impl
+        }
+        ImGui::EndMenu();
+      }
       ImGui::EndMainMenuBar();
     }
+  }
+  void UpdateNode() {
+    // TODO: impl
   }
   void Update() {
     ImGui_ImplOpenGL3_NewFrame();
@@ -67,6 +75,7 @@ public:
 
     ImGui::Begin("neditor", nullptr, window_flags);
     UpdateMenu();
+    UpdateNode();
     ImGui::End();
   }
   void Render() {
