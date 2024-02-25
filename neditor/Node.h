@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -19,10 +20,13 @@ class NodeImpl {
   std::vector<std::string> islots{"demo", "asd"};
   std::vector<std::string> oslots{"asd", "123"};
 
-  std::vector<std::pair<NodeImpl *, std::size_t>> links;
+  std::unordered_map<std::string, std::pair<NodeImpl *, std::size_t>> ilinks;
+  std::unordered_map<std::string,
+                     std::vector<std::pair<NodeImpl *, std::size_t>>>
+      olinks;
 
-  bool IsIslotLinked(std::size_t idx) { return false; }
-  bool IsOslotLinked(std::size_t idx) { return false; }
+  bool IsIslotLinked(std::size_t idx) { return ilinks.count(islots[idx]); }
+  bool IsOslotLinked(std::size_t idx) { return olinks[oslots[idx]].size(); }
 
   ImVec2 UpdateTitle(ImVec2 pos, ImU32 col = IM_COL32(255, 255, 255, 255)) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
