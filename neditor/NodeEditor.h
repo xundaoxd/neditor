@@ -13,8 +13,6 @@
 class NodeEditor {
   GLFWwindow *window;
 
-  ImVec2 node_pos;
-
   std::vector<Node> nodes;
 
 public:
@@ -46,7 +44,8 @@ public:
       }
       if (ImGui::BeginMenu("Edit")) {
         if (ImGui::MenuItem("New Node")) {
-          nodes.emplace_back(node_pos);
+          const ImGuiViewport *main_viewport = ImGui::GetMainViewport();
+          nodes.emplace_back(main_viewport->WorkPos - main_viewport->Pos);
         }
         ImGui::EndMenu();
       }
@@ -74,14 +73,12 @@ public:
     ImGui::SetNextWindowSize(main_viewport->WorkSize);
 
     ImGuiWindowFlags window_flags = 0;
-    window_flags |= ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar;
-    window_flags |= ImGuiWindowFlags_NoCollapse;
+    window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse;
     window_flags |= ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-    window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+    window_flags |=
+        ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
     ImGui::Begin("neditor", nullptr, window_flags);
-    const ImGuiViewport *window_viewport = ImGui::GetWindowViewport();
-    node_pos = window_viewport->WorkPos + main_viewport->WorkPos;
     UpdateMenu();
     UpdateNodes();
     ImGui::End();
