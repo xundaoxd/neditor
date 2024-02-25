@@ -219,8 +219,10 @@ struct Node {
     // draw_list->AddRect(oslots_p0_padding, oslots_p1_padding, col, 4);
 
     auto node_p1_padding =
-        ImVec2{std::max(islots_p1_padding.x, oslots_p1_padding.x),
-               std::max(islots_p1_padding.y, oslots_p1_padding.y)};
+        ImVec2{std::max({islots_p1_padding.x, oslots_p1_padding.x,
+                         title_p1_padding.x}),
+               std::max({islots_p1_padding.y, oslots_p1_padding.y,
+                         title_p1_padding.y})};
     draw_list->AddRect(node_p0_padding, node_p1_padding, col, 4);
 
     auto header_p0_padding = node_p0_padding;
