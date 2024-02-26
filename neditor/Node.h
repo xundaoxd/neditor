@@ -242,7 +242,7 @@ struct Node {
       ImGui::InvisibleButton("##", header_p1_padding - header_p0_padding,
                              ImGuiButtonFlags_MouseButtonLeft);
       ImGui::PopID();
-      if (ImGui::IsItemHovered()) {
+      if (selected_node == this) {
         draw_list->AddRectFilled(header_p0_padding, header_p1_padding,
                                  (col & ~(0xff << IM_COL32_A_SHIFT)) |
                                      (50 << IM_COL32_A_SHIFT));
