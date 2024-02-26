@@ -4,8 +4,11 @@
   artifacts:
     paths:
       - build/neditor
+  variables:
+    DEBIAN_FRONTEND: noninteractive
   before_script:
     - apt update
+    - apt install -y cmake build-essential git
     - apt install -y libglfw3-dev
 
 build:x86:
