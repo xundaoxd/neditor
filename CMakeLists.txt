@@ -10,9 +10,10 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -rdynamic -fno-omit-fram
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 find_package(imgui REQUIRED)
+find_package(json REQUIRED)
 
 file(GLOB_RECURSE SRCS neditor/*.cc)
 add_executable(neditor ${SRCS})
-target_link_libraries(neditor imgui)
+target_link_libraries(neditor PUBLIC imgui nlohmann_json::nlohmann_json)
 target_include_directories(neditor PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
