@@ -20,8 +20,7 @@ struct NodeProperty {
         is_editing = false;
       }
     } else {
-      ImGui::TextUnformatted(node->title.c_str(),
-                             node->title.c_str() + node->title.size());
+      ImGui::Text("%-32s", node->title.c_str());
       if (ImGui::IsItemHovered() &&
           ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
         edit_target = 0;
@@ -33,11 +32,11 @@ struct NodeProperty {
   }
 
   void UpdateSlots(const char *label, std::list<Slot> &slots, int n) {
-    if (ImGui::CollapsingHeader(label)) {
+    if (ImGui::CollapsingHeader(label, ImGuiTreeNodeFlags_DefaultOpen)) {
       std::size_t del_idx = -1;
       std::size_t idx = 0;
       ImGui::Spacing();
-      ImGui::Button("New");
+      ImGui::Button("New Slot");
       if (ImGui::IsItemHovered() &&
           ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
         slots.emplace_back("New");
@@ -53,8 +52,7 @@ struct NodeProperty {
             is_editing = false;
           }
         } else {
-          ImGui::TextUnformatted(slot.name.c_str(),
-                                 slot.name.c_str() + slot.name.size());
+          ImGui::Text("%-32s", slot.name.c_str());
           if (ImGui::IsItemHovered() &&
               ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
             edit_slot = idx;
