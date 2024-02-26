@@ -19,7 +19,6 @@ class NodeEditor {
   NodeProperty nproperty;
 
   bool property_view{true};
-  Node *current_node{nullptr};
 
 public:
   void Init(GLFWwindow *window, const char *glsl_version) {
@@ -72,9 +71,6 @@ public:
   void UpdateNodes() {
     for (auto &node : nodes) {
       node.UpdateNode();
-      if (node.IsSelected()) {
-        current_node = &node;
-      }
     }
   }
   void DoDockSplit() {
@@ -134,7 +130,7 @@ public:
 
     if (property_view) {
       ImGui::Begin("PropertyView");
-      nproperty.Update(current_node);
+      nproperty.Update();
       ImGui::End();
     }
     // ImGui::ShowDemoWindow();

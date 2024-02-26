@@ -30,10 +30,16 @@ struct NodeProperty {
     ImGui::Spacing();
   }
 
-  void UpdateSlots(const char *label, std::list<Node::Slot> &slots, int n) {
+  void UpdateSlots(const char *label, std::list<Slot> &slots, int n) {
     if (ImGui::CollapsingHeader(label)) {
       std::size_t del_idx = -1;
       std::size_t idx = 0;
+      ImGui::Spacing();
+      ImGui::Button("New");
+      if (ImGui::IsItemHovered() &&
+          ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+        slots.emplace_back("New");
+      }
       ImGui::Spacing();
       for (auto &slot : slots) {
         if (is_editing && edit_target == n && edit_slot == idx) {
@@ -62,12 +68,6 @@ struct NodeProperty {
         ImGui::Spacing();
         idx++;
       }
-      ImGui::Button("New");
-      ImGui::Spacing();
-      if (ImGui::IsItemHovered() &&
-          ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-        slots.emplace_back("New");
-      }
       if (del_idx != -1ul) {
         auto it = std::next(slots.begin(), del_idx);
         it->UnLink();
@@ -76,7 +76,8 @@ struct NodeProperty {
     }
   }
 
-  void Update(Node *node) {
+  void Update() {
+    Node *node = Node::GetSelectedNode();
     if (!node) {
       return;
     }

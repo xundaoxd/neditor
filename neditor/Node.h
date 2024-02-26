@@ -9,27 +9,28 @@
 
 #include "common.h"
 
-struct Node {
-  struct Slot {
-    std::string name;
-    ImVec2 pos;
+struct Slot {
+  std::string name;
+  ImVec2 pos;
 
-    std::list<Slot *> links;
+  std::list<Slot *> links;
 
-    Slot(std::string name, ImVec2 pos)
-        : name(std::move(name)), pos(std::move(pos)) {}
-    Slot(std::string name) : Slot(std::move(name), {0, 0}) {}
+  Slot(std::string name, ImVec2 pos)
+      : name(std::move(name)), pos(std::move(pos)) {}
+  Slot(std::string name) : Slot(std::move(name), {0, 0}) {}
 
-    void UnLink() {
-      for (Slot *peer : links) {
-        peer->links.erase(
-            std::remove_if(peer->links.begin(), peer->links.end(),
-                           [this](Slot *item) { return item == this; }),
-            peer->links.end());
-      }
-      links.clear();
+  void UnLink() {
+    for (Slot *peer : links) {
+      peer->links.erase(
+          std::remove_if(peer->links.begin(), peer->links.end(),
+                         [this](Slot *item) { return item == this; }),
+          peer->links.end());
     }
-  };
+    links.clear();
+  }
+};
+
+struct Node {
   static constexpr float padding = 6;
 
   static Node *selected_node;
@@ -60,6 +61,7 @@ struct Node {
   bool IsOslotLinked(std::size_t idx) const {
     return GetOslot(idx).links.size();
   }
+  static Node *GetSelectedNode();
 
   bool IsSelected() const { return this == Node ::selected_node; }
 
@@ -253,7 +255,9 @@ struct Node {
 
 inline Node *Node::selected_node{nullptr};
 inline bool Node::is_linking{false};
-inline Node::Slot *Node::src_slot;
+inline Slot *Node::src_slot;
+
+inline Node *Node::GetSelectedNode() { return Node::selected_node; }
 
 inline void Node::FinishUpdate() {
   if (Node::is_linking) {
