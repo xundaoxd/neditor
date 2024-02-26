@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <list>
 
 #include "imgui.h"
@@ -75,12 +76,12 @@ public:
   }
   void DoDockSplit() {
     ImGuiID dockspace_id = ImGui::GetID("neditor dock");
+    const ImGuiViewport *main_viewport = ImGui::GetMainViewport();
     if (ImGui::DockBuilderGetNode(dockspace_id) == nullptr) {
       ImGui::DockBuilderAddNode(dockspace_id,
                                 ImGuiDockNodeFlags_PassthruCentralNode |
                                     ImGuiDockNodeFlags_DockSpace);
-      ImGui::DockBuilderSetNodeSize(dockspace_id,
-                                    ImGui::GetMainViewport()->WorkSize);
+      ImGui::DockBuilderSetNodeSize(dockspace_id, main_viewport->WorkSize);
       ImGuiID dock_left, dock_right;
       ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Right, 0.2f,
                                   &dock_right, &dock_left);
@@ -89,7 +90,7 @@ public:
 
       ImGui::DockBuilderFinish(dockspace_id);
     }
-    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f),
+    ImGui::DockSpace(dockspace_id, main_viewport->WorkSize,
                      ImGuiDockNodeFlags_PassthruCentralNode);
   }
   void Update() {
