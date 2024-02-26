@@ -12,6 +12,7 @@ struct NodeProperty {
   void UpdateTitle(Node *node) {
     ImGui::Spacing();
     if (is_editing && edit_target == 0) {
+      ImGui::SetKeyboardFocusHere();
       if (ImGui::InputText("##", edit_buf, sizeof(edit_buf),
                            ImGuiInputTextFlags_EnterReturnsTrue)) {
         node->title = edit_buf;
@@ -43,6 +44,7 @@ struct NodeProperty {
       ImGui::Spacing();
       for (auto &slot : slots) {
         if (is_editing && edit_target == n && edit_slot == idx) {
+          ImGui::SetKeyboardFocusHere();
           if (ImGui::InputText("##", edit_buf, sizeof(edit_buf),
                                ImGuiInputTextFlags_EnterReturnsTrue)) {
             slot.name = edit_buf;
