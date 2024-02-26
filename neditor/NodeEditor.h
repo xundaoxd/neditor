@@ -19,6 +19,7 @@ class NodeEditor {
   NodeProperty nproperty;
 
   bool property_view{true};
+  bool metrics_view{false};
 
 public:
   void Init(GLFWwindow *window, const char *glsl_version) {
@@ -56,6 +57,9 @@ public:
       if (ImGui::BeginMenu("View")) {
         if (ImGui::MenuItem("Property")) {
           property_view = !property_view;
+        }
+        if (ImGui::MenuItem("Metrics")) {
+          metrics_view = !metrics_view;
         }
         ImGui::EndMenu();
       }
@@ -124,6 +128,9 @@ public:
     UpdateGraph();
     if (property_view) {
       UpdateProperty();
+    }
+    if (metrics_view) {
+      ImGui::ShowMetricsWindow();
     }
   }
 
