@@ -79,13 +79,14 @@ struct NodeProperty {
   }
 
   void Update() {
+    ImGui::Begin("PropertyView");
     Node *node = Node::GetSelectedNode();
-    if (!node) {
-      return;
+    if (node) {
+      UpdateTitle(node);
+      UpdateSlots("Input SLots", node->islots, 1);
+      UpdateSlots("Output SLots", node->oslots, 2);
     }
-    UpdateTitle(node);
-    UpdateSlots("Input SLots", node->islots, 1);
-    UpdateSlots("Output SLots", node->oslots, 2);
+    ImGui::End();
   }
 };
 
