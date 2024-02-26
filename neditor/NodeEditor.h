@@ -66,9 +66,6 @@ public:
       ImGui::EndMainMenuBar();
     }
   }
-  void UpdateGraph() { ngraph.Update(); }
-
-  void UpdateProperty() { nproperty.Update(); }
 
   void UpdateDock() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
@@ -113,9 +110,9 @@ public:
     UpdateMenu();
     UpdateDock();
 
-    UpdateGraph();
+    ngraph.Update();
     if (property_view) {
-      UpdateProperty();
+      nproperty.Update();
     }
     if (metrics_view) {
       ImGui::ShowMetricsWindow();
