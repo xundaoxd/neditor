@@ -43,6 +43,11 @@ struct Node {
   std::list<Slot> islots;
   std::list<Slot> oslots;
 
+  ~Node() {
+    if (selected_node == this) {
+      selected_node = nullptr;
+    }
+  }
   Node(ImVec2 pos) : pos(pos), title("NewNode") {}
 
   Slot &GetIslot(std::size_t idx) { return *std::next(islots.begin(), idx); }
