@@ -22,7 +22,8 @@ struct NodeProperty {
     } else {
       ImGui::TextUnformatted(node->title.c_str(),
                              node->title.c_str() + node->title.size());
-      if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+      if (ImGui::IsItemHovered() &&
+          ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
         edit_target = 0;
         strncpy(edit_buf, node->title.c_str(), node->title.size());
         is_editing = true;
@@ -54,7 +55,8 @@ struct NodeProperty {
         } else {
           ImGui::TextUnformatted(slot.name.c_str(),
                                  slot.name.c_str() + slot.name.size());
-          if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+          if (ImGui::IsItemHovered() &&
+              ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
             edit_slot = idx;
             edit_target = n;
             strncpy(edit_buf, slot.name.c_str(), slot.name.size());
