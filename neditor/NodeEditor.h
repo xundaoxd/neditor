@@ -9,14 +9,13 @@
 
 #include <GLFW/glfw3.h>
 
-#include "Node.h"
+#include "NodeGraph.h"
 #include "NodeProperty.h"
-#include "common.h"
 
 class NodeEditor {
   GLFWwindow *window;
 
-  std::list<Node> nodes;
+  NodeGraph ngraph;
   NodeProperty nproperty;
 
   bool property_view{true};
@@ -38,7 +37,7 @@ public:
     if (ImGui::BeginMainMenuBar()) {
       if (ImGui::BeginMenu("File")) {
         if (ImGui::MenuItem("New")) {
-          nodes.clear();
+          ngraph.Reset();
         }
         if (ImGui::MenuItem("Load")) {
           // TODO: impl
@@ -50,7 +49,7 @@ public:
       }
       if (ImGui::BeginMenu("Edit")) {
         if (ImGui::MenuItem("New Node")) {
-          nodes.emplace_back(ImVec2{100, 100});
+          ngraph.NewNode();
         }
         ImGui::EndMenu();
       }
@@ -63,15 +62,9 @@ public:
       ImGui::EndMainMenuBar();
     }
   }
-  void UpdateEditor() {
+  void UpdateGraph() {
     ImGui::Begin("NodeGraph");
-    for (auto &node : nodes) {
-      node.UpdateLinks();
-    }
-    for (auto &node : nodes) {
-      node.UpdateNode();
-    }
-    Node::FinishUpdate();
+    ngraph.Update();
     ImGui::End();
   }
 
@@ -124,7 +117,7 @@ public:
     UpdateMenu();
     UpdateDock();
 
-    UpdateEditor();
+    UpdateGraph();
     if (property_view) {
       UpdateProperty();
     }
