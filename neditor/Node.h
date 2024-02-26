@@ -87,7 +87,7 @@ struct Node {
     return size;
   }
 
-  ImVec2 UpdateIslot(ImVec2 pos, std::size_t idx, ImVec2 &radio_sz,
+  ImVec2 UpdateIslot(ImVec2 pos, std::size_t idx,
                      ImU32 col = IM_COL32(255, 255, 255, 255)) {
     ImDrawList *draw_list = ImGui::GetWindowDrawList();
     Slot &slot = GetIslot(idx);
@@ -107,7 +107,7 @@ struct Node {
         ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
       slot.UnLink();
     }
-    radio_sz = ImGui::GetItemRectSize();
+    ImVec2 radio_sz = ImGui::GetItemRectSize();
     ImVec2 size = ImGui::CalcTextSize(slot.name.c_str(),
                                       slot.name.c_str() + slot.name.size());
     draw_list->AddText(pos + ImVec2{radio_sz.x, 0}, col, slot.name.c_str(),
@@ -135,22 +135,21 @@ struct Node {
     return ImVec2{size.x + radio_sz.x, std::max(size.y, radio_sz.y)};
   }
 
-  ImVec2 UpdateIslots(ImVec2 pos, ImVec2 &radio_sz,
-                      ImU32 col = IM_COL32(255, 255, 255, 255)) {
+  ImVec2 UpdateIslots(ImVec2 pos, ImU32 col = IM_COL32(255, 255, 255, 255)) {
     if (islots.empty()) {
       return {0, 0};
     }
     auto islots_p0 = pos;
     float max_w = 0;
 
-    auto islot_sz = UpdateIslot(pos, 0, radio_sz, col);
+    auto islot_sz = UpdateIslot(pos, 0, col);
     max_w = std::max(max_w, islot_sz.x);
     pos += ImVec2{0, islot_sz.y};
 
     for (std::size_t i = 1; i < islots.size(); i++) {
       pos += ImVec2{0, padding};
 
-      auto islot_sz = UpdateIslot(pos, i, radio_sz, col);
+      auto islot_sz = UpdateIslot(pos, i, col);
       max_w = std::max(max_w, islot_sz.x);
       pos += ImVec2{0, islot_sz.y};
     }
@@ -158,11 +157,15 @@ struct Node {
     return islots_p1 - islots_p0;
   }
 
-  ImVec2 UpdateOslots(ImVec2 pos, ImVec2 radio_sz,
-                      ImU32 col = IM_COL32(255, 255, 255, 255)) {
+  ImVec2 UpdateOslots(ImVec2 pos, ImU32 col = IM_COL32(255, 255, 255, 255)) {
     if (oslots.empty()) {
       return {0, 0};
     }
+    ImVec2 radio_sz;
+    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0);
+    ImGui::RadioButton("##", true);
+    radio_sz = ImGui::GetItemRectSize();
+    ImGui::PopStyleVar();
 
     float max_w = 0;
     for (auto &slot : oslots) {
@@ -205,10 +208,9 @@ struct Node {
     auto title_p1_padding =
         title_p0_padding + title_sz + ImVec2{padding * 2, padding * 2};
 
-    ImVec2 radio_sz;
     auto islots_p0_padding = ImVec2{title_p0_padding.x, title_p1_padding.y};
-    auto islots_sz = UpdateIslots(islots_p0_padding + ImVec2{padding, padding},
-                                  radio_sz, col);
+    auto islots_sz =
+        UpdateIslots(islots_p0_padding + ImVec2{padding, padding}, col);
     auto islots_p1_padding =
         islots_p0_padding + islots_sz + ImVec2{padding * 2, padding * 2};
     // draw_list->AddRect(islots_p0_padding, islots_p1_padding, col, 4);
@@ -216,8 +218,8 @@ struct Node {
     auto oslots_p0_padding =
         ImVec2{islots_p0_padding.x + padding + islots_sz.x + padding * 4,
                islots_p0_padding.y};
-    auto oslots_sz = UpdateOslots(oslots_p0_padding + ImVec2{padding, padding},
-                                  radio_sz, col);
+    auto oslots_sz =
+        UpdateOslots(oslots_p0_padding + ImVec2{padding, padding}, col);
     auto oslots_p1_padding =
         oslots_p0_padding + oslots_sz + ImVec2{padding * 2, padding * 2};
     // draw_list->AddRect(oslots_p0_padding, oslots_p1_padding, col, 4);
