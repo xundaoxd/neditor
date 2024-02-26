@@ -50,8 +50,7 @@ public:
       }
       if (ImGui::BeginMenu("Edit")) {
         if (ImGui::MenuItem("New Node")) {
-          const ImGuiViewport *main_viewport = ImGui::GetMainViewport();
-          nodes.emplace_back(main_viewport->WorkPos);
+          nodes.emplace_back(ImVec2{100, 100});
         }
         ImGui::EndMenu();
       }
@@ -64,81 +63,78 @@ public:
       ImGui::EndMainMenuBar();
     }
   }
-  void UpdateConns() {
+  void UpdateEditor() {
+    ImGui::Begin("NodeGraph");
     for (auto &node : nodes) {
       node.UpdateLinks();
     }
-  }
-  void UpdateNodes() {
     for (auto &node : nodes) {
       node.UpdateNode();
     }
+    Node::FinishUpdate();
+    ImGui::End();
   }
-  void DoDockSplit() {
-    ImGuiID dockspace_id = ImGui::GetID("neditor dock");
-    const ImGuiViewport *main_viewport = ImGui::GetMainViewport();
-    if (ImGui::DockBuilderGetNode(dockspace_id) == nullptr) {
-      ImGui::DockBuilderAddNode(dockspace_id,
-                                ImGuiDockNodeFlags_PassthruCentralNode |
-                                    ImGuiDockNodeFlags_DockSpace);
-      ImGui::DockBuilderSetNodeSize(dockspace_id, main_viewport->WorkSize);
-      ImGuiID dock_left, dock_right;
-      ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Right, 0.2f,
-                                  &dock_right, &dock_left);
-      ImGui::DockBuilderDockWindow("node graph", dock_left);
-      ImGui::DockBuilderDockWindow("PropertyView", dock_right);
 
-      ImGui::DockBuilderFinish(dockspace_id);
-    }
-    ImGui::DockSpace(dockspace_id, main_viewport->WorkSize,
-                     ImGuiDockNodeFlags_PassthruCentralNode);
+  void UpdateProperty() {
+    ImGui::Begin("PropertyView");
+    nproperty.Update();
+    ImGui::End();
   }
-  void Update() {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
+
+  void UpdateDock() {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
     const ImGuiViewport *main_viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(main_viewport->WorkPos);
     ImGui::SetNextWindowSize(main_viewport->WorkSize);
 
-    ImGuiWindowFlags window_flags = 0;
-    window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse;
-    window_flags |= ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-    window_flags |=
-        ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+    ImGui::Begin("Neditor", nullptr,
+                 ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+                     ImGuiWindowFlags_NoBringToFrontOnFocus |
+                     ImGuiWindowFlags_NoFocusOnAppearing);
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin("neditor", nullptr, window_flags);
-    ImGui::PopStyleVar(3);
-
-    DoDockSplit();
-
-    ImGui::End();
-
-    ImGuiWindowClass window_class;
-    window_class.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar;
-    ImGui::SetNextWindowClass(&window_class);
-    ImGui::Begin("node graph");
-    UpdateMenu();
-    UpdateConns();
-    UpdateNodes();
-    Node::FinishUpdate();
-    ImGui::End();
-
-    if (property_view) {
-      ImGui::Begin("PropertyView");
-      nproperty.Update();
-      ImGui::End();
+    ImGuiID dock_id = ImGui::GetID("NeditorDock");
+    if (!ImGui::DockBuilderGetNode(dock_id)) {
+      ImGui::DockBuilderAddNode(dock_id,
+                                ImGuiDockNodeFlags_PassthruCentralNode |
+                                    ImGuiDockNodeFlags_DockSpace);
+      ImGui::DockBuilderSetNodeSize(dock_id, main_viewport->WorkSize);
+      ImGuiID dock_left, dock_right;
+      ImGui::DockBuilderSplitNode(dock_id, ImGuiDir_Right, 0.4f, &dock_right,
+                                  &dock_left);
+      ImGui::DockBuilderDockWindow("NodeGraph", dock_left);
+      ImGui::DockBuilderDockWindow("PropertyView", dock_right);
+      ImGui::DockBuilderFinish(dock_id);
     }
-    // ImGui::ShowDemoWindow();
+    ImGui::DockSpace(dock_id, main_viewport->WorkSize,
+                     ImGuiDockNodeFlags_PassthruCentralNode);
+
+    ImGui::End();
+
+    ImGui::PopStyleVar(3);
   }
+
+  void Update() {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    UpdateMenu();
+    UpdateDock();
+
+    UpdateEditor();
+    if (property_view) {
+      UpdateProperty();
+    }
+  }
+
   void Render() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   }
+
   void Shutdown() {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
