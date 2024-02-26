@@ -76,7 +76,6 @@ public:
   void DoDockSplit() {
     ImGuiID dockspace_id = ImGui::GetID("neditor dock");
     if (ImGui::DockBuilderGetNode(dockspace_id) == nullptr) {
-      ImGui::DockBuilderRemoveNode(dockspace_id);
       ImGui::DockBuilderAddNode(dockspace_id,
                                 ImGuiDockNodeFlags_PassthruCentralNode |
                                     ImGuiDockNodeFlags_DockSpace);
