@@ -1,0 +1,17 @@
+.build:
+  tags:
+    - compilation
+  artifacts:
+    paths:
+      - build/neditor
+  before_script:
+    - apt update
+    - apt install -y libglfw3-dev
+
+build:x86:
+  extends: .build
+  image: ubuntu:20.04
+  script:
+    - cmake -B build -DCMAKE_BUILD_TYPE=Release
+    - cmake --build build
+
