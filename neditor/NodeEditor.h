@@ -88,7 +88,7 @@ public:
                                     ImGuiDockNodeFlags_DockSpace);
       ImGui::DockBuilderSetNodeSize(dock_id, main_viewport->WorkSize);
       ImGuiID dock_left, dock_right;
-      ImGui::DockBuilderSplitNode(dock_id, ImGuiDir_Right, 0.4f, &dock_right,
+      ImGui::DockBuilderSplitNode(dock_id, ImGuiDir_Right, 0.3f, &dock_right,
                                   &dock_left);
       ImGui::DockBuilderDockWindow("NodeGraph", dock_left);
       ImGui::DockBuilderDockWindow("PropertyView", dock_right);

@@ -9,15 +9,17 @@
 
 #include "common.h"
 
+struct Node;
 struct Slot {
+  Node *node;
   std::string name;
   ImVec2 pos;
 
   std::list<Slot *> links;
 
-  Slot(std::string name, ImVec2 pos)
-      : name(std::move(name)), pos(std::move(pos)) {}
-  Slot(std::string name) : Slot(std::move(name), {0, 0}) {}
+  Slot(Node *node, std::string name, ImVec2 pos)
+      : node(node), name(std::move(name)), pos(std::move(pos)) {}
+  Slot(Node *node, std::string name) : Slot(node, std::move(name), {0, 0}) {}
 
   void UnLink() {
     for (Slot *peer : links) {
