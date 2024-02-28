@@ -37,15 +37,6 @@ public:
   void UpdateMenu() {
     if (ImGui::BeginMainMenuBar()) {
       if (ImGui::BeginMenu("File")) {
-        if (ImGui::MenuItem("New")) {
-          ngraph.Reset();
-        }
-        if (ImGui::MenuItem("Load")) {
-          // TODO: impl
-        }
-        if (ImGui::MenuItem("Save")) {
-          // TODO: impl
-        }
         ImGui::EndMenu();
       }
       if (ImGui::BeginMenu("Edit")) {

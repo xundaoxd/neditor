@@ -16,7 +16,6 @@ struct NodeProperty {
       if (ImGui::InputText("##", edit_buf, sizeof(edit_buf),
                            ImGuiInputTextFlags_EnterReturnsTrue)) {
         node->title = edit_buf;
-        memset(edit_buf, 0, sizeof(edit_buf));
         is_editing = false;
       }
     } else {
@@ -24,7 +23,7 @@ struct NodeProperty {
       if (ImGui::IsItemHovered() &&
           ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
         edit_target = 0;
-        strncpy(edit_buf, node->title.c_str(), node->title.size());
+        strncpy(edit_buf, node->title.c_str(), sizeof(edit_buf));
         is_editing = true;
       }
     }
@@ -49,7 +48,6 @@ struct NodeProperty {
           if (ImGui::InputText("##", edit_buf, sizeof(edit_buf),
                                ImGuiInputTextFlags_EnterReturnsTrue)) {
             slot.name = edit_buf;
-            memset(edit_buf, 0, sizeof(edit_buf));
             is_editing = false;
           }
         } else {
@@ -58,7 +56,7 @@ struct NodeProperty {
               ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
             edit_slot = idx;
             edit_target = n;
-            strncpy(edit_buf, slot.name.c_str(), slot.name.size());
+            strncpy(edit_buf, slot.name.c_str(), sizeof(edit_buf));
             is_editing = true;
           }
           ImGui::SameLine();
@@ -84,8 +82,8 @@ struct NodeProperty {
     Node *node = Node::GetSelectedNode();
     if (node) {
       UpdateTitle(node);
-      UpdateSlots("Input SLots", node, node->islots, 1);
-      UpdateSlots("Output SLots", node, node->oslots, 2);
+      UpdateSlots("Input Slots", node, node->islots, 1);
+      UpdateSlots("Output Slots", node, node->oslots, 2);
     }
     ImGui::End();
   }
