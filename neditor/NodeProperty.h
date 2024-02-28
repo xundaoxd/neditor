@@ -79,8 +79,8 @@ struct NodeProperty {
     }
   }
 
-  void Update() {
-    ImGui::Begin("PropertyView");
+  void Update(const char *name) {
+    ImGui::Begin(name);
     Node *node = Node::GetSelectedNode();
     if (node) {
       UpdateTitle(node);

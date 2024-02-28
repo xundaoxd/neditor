@@ -26,11 +26,11 @@ public:
                          IM_COL32(200, 200, 200, 40));
     }
   }
-  void Update() {
+  void Update(const char *name) {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin("NodeGraph");
+    ImGui::Begin(name);
     ImGui::PopStyleVar(3);
 
     UpdateBackground();

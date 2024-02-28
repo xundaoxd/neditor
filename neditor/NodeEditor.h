@@ -110,9 +110,9 @@ public:
     UpdateMenu();
     UpdateDock();
 
-    ngraph.Update();
+    ngraph.Update("NodeGraph");
     if (property_view) {
-      nproperty.Update();
+      nproperty.Update("PropertyView");
     }
     if (metrics_view) {
       ImGui::ShowMetricsWindow();
