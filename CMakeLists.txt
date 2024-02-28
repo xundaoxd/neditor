@@ -9,8 +9,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pipe")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -rdynamic -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-inline")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
-find_package(imgui REQUIRED)
-find_package(json REQUIRED)
+add_subdirectory(3rdparty)
 
 file(GLOB_RECURSE SRCS neditor/*.cc)
 add_executable(neditor ${SRCS})
