@@ -22,15 +22,15 @@ class NodeEditor {
   bool metrics_view{false};
 
 public:
-  void Init(GLFWwindow *window, const char *glsl_version) {
-    this->window = window;
+  void Init(GLFWwindow *window_, const char *glsl_version) {
+    window = window_;
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     io.ConfigFlags |=
         ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_DockingEnable;
     io.IniFilename = nullptr;
-    ImGui_ImplGlfw_InitForOpenGL(this->window, true);
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
     ImGui::StyleColorsDark();
   }
