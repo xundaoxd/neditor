@@ -1,95 +1,10 @@
 #pragma once
 
-#include "Node.h"
 #include "imgui.h"
 
 struct NodeProperty {
-  static bool is_editing;
-  static char edit_buf[64];
-  static int edit_target; // 0 for title, 1 for i slot, 2 for o slot
-  static std::size_t edit_slot;
-
-  void UpdateTitle(Node *node) {
-    ImGui::Spacing();
-    if (is_editing && edit_target == 0) {
-      ImGui::SetKeyboardFocusHere();
-      if (ImGui::InputText("##", edit_buf, sizeof(edit_buf),
-                           ImGuiInputTextFlags_EnterReturnsTrue)) {
-        node->title = edit_buf;
-        is_editing = false;
-      }
-    } else {
-      ImGui::Text("%-32s", node->title.c_str());
-      if (ImGui::IsItemHovered() &&
-          ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-        edit_target = 0;
-        strncpy(edit_buf, node->title.c_str(), sizeof(edit_buf));
-        is_editing = true;
-      }
-    }
-    ImGui::Spacing();
-  }
-
-  void UpdateSlots(const char *label, Node *node, std::list<Slot> &slots,
-                   int n) {
-    if (ImGui::CollapsingHeader(label, ImGuiTreeNodeFlags_DefaultOpen)) {
-      std::size_t del_idx = -1;
-      std::size_t idx = 0;
-      ImGui::Spacing();
-      ImGui::Button("New Slot");
-      if (ImGui::IsItemHovered() &&
-          ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-        slots.emplace_back(node, "New");
-      }
-      ImGui::Spacing();
-      for (auto &slot : slots) {
-        if (is_editing && edit_target == n && edit_slot == idx) {
-          ImGui::SetKeyboardFocusHere();
-          if (ImGui::InputText("##", edit_buf, sizeof(edit_buf),
-                               ImGuiInputTextFlags_EnterReturnsTrue)) {
-            slot.name = edit_buf;
-            is_editing = false;
-          }
-        } else {
-          ImGui::Text("%-32s", slot.name.c_str());
-          if (ImGui::IsItemHovered() &&
-              ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-            edit_slot = idx;
-            edit_target = n;
-            strncpy(edit_buf, slot.name.c_str(), sizeof(edit_buf));
-            is_editing = true;
-          }
-          ImGui::SameLine();
-          ImGui::Button("Del");
-          if (ImGui::IsItemHovered() &&
-              ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-            del_idx = idx;
-          }
-        }
-        ImGui::Spacing();
-        idx++;
-      }
-      if (del_idx != -1ul) {
-        auto it = std::next(slots.begin(), del_idx);
-        it->UnLink();
-        slots.erase(it);
-      }
-    }
-  }
-
   void Update(const char *name) {
     ImGui::Begin(name);
-    Node *node = Node::GetSelectedNode();
-    if (node) {
-      UpdateTitle(node);
-      UpdateSlots("Input Slots", node, node->islots, 1);
-      UpdateSlots("Output Slots", node, node->oslots, 2);
-    }
     ImGui::End();
   }
 };
-
-inline bool NodeProperty::is_editing{false};
-inline char NodeProperty::edit_buf[64];
-inline int NodeProperty::edit_target;
-inline std::size_t NodeProperty::edit_slot;

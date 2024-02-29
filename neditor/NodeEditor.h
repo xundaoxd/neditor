@@ -41,7 +41,7 @@ public:
       }
       if (ImGui::BeginMenu("Edit")) {
         if (ImGui::MenuItem("New Node")) {
-          ngraph.NewNode();
+          // TODO: impl
         }
         ImGui::EndMenu();
       }
