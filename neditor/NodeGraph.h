@@ -7,10 +7,11 @@
 #include "common.h"
 
 class NodeGraph {
+  constexpr static float GRID_STEP{64.0f};
+
   ImVec2 canvas_p0;
   ImVec2 canvas_sz;
   ImVec2 scrolling{0.f, 0.f};
-  const float GRID_STEP{64.0f};
 
   void UpdateCanvas() {
     ImGuiIO &io = ImGui::GetIO();
@@ -57,5 +58,9 @@ public:
     UpdateCanvas();
 
     ImGui::End();
+  }
+
+  void NewNode() {
+    // TODO: impl
   }
 };
