@@ -5,7 +5,7 @@
 #include "imgui.h"
 
 template <typename T> ImVec2 operator+(const ImVec2 &a, const T &b) {
-  return ImVec2(a.x - b, a.y - b);
+  return ImVec2(a.x + b, a.y + b);
 }
 template <typename T> ImVec2 operator-(const ImVec2 &a, const T &b) {
   return ImVec2(a.x - b, a.y - b);

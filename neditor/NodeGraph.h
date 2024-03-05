@@ -9,8 +9,14 @@
 class NodeGraph {
   constexpr static float GRID_STEP{64.0f};
 
-  constexpr static ImU32 color_cbackground = IM_COL32(50, 50, 50, 255);
-  constexpr static ImU32 color_cforeground = IM_COL32(200, 200, 200, 40);
+  constexpr static ImU32 color_background = IM_COL32(50, 50, 50, 255);
+  constexpr static ImU32 color_foreground = IM_COL32(200, 200, 200, 40);
+
+  constexpr static ImU32 color_nbackground = IM_COL32(100, 100, 100, 255);
+  constexpr static ImU32 color_nforeground = IM_COL32(200, 200, 200, 255);
+
+  constexpr static ImU32 color_hbackground = IM_COL32(0, 127, 255, 255);
+  constexpr static ImU32 color_hforeground = IM_COL32(200, 200, 200, 255);
 
   ImVec2 canvas_p0;
   ImVec2 canvas_sz;
@@ -24,17 +30,17 @@ class NodeGraph {
     canvas_sz = ImGui::GetContentRegionAvail();
 
     draw_list->AddRectFilled(canvas_p0, canvas_p0 + canvas_sz,
-                             color_cbackground);
-    draw_list->AddRect(canvas_p0, canvas_p0 + canvas_sz, color_cforeground);
+                             color_background);
+    draw_list->AddRect(canvas_p0, canvas_p0 + canvas_sz, color_foreground);
     for (float x = fmodf(scrolling.x, GRID_STEP); x < canvas_sz.x;
          x += GRID_STEP) {
       draw_list->AddLine(canvas_p0 + ImVec2{x, 0},
-                         canvas_p0 + ImVec2{x, canvas_sz.y}, color_cforeground);
+                         canvas_p0 + ImVec2{x, canvas_sz.y}, color_foreground);
     }
     for (float y = fmodf(scrolling.y, GRID_STEP); y < canvas_sz.y;
          y += GRID_STEP) {
       draw_list->AddLine(canvas_p0 + ImVec2{0, y},
-                         canvas_p0 + ImVec2{canvas_sz.x, y}, color_cforeground);
+                         canvas_p0 + ImVec2{canvas_sz.x, y}, color_foreground);
     }
     ImGui::InvisibleButton("##", canvas_sz);
     if (ImGui::IsItemHovered() &&
