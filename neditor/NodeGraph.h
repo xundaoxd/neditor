@@ -1,10 +1,22 @@
 #pragma once
 
 #include <cmath>
+#include <list>
 
 #include "imgui.h"
 
 #include "common.h"
+
+struct Slot {
+  std::string name;
+  ImVec2 pos;
+};
+
+struct Node {
+  std::string name;
+  ImVec2 pos;
+  std::list<Slot> islots, oslots;
+};
 
 class NodeGraph {
   constexpr static float GRID_STEP{64.0f};
@@ -21,6 +33,8 @@ class NodeGraph {
   ImVec2 canvas_p0;
   ImVec2 canvas_sz;
   ImVec2 scrolling{0.f, 0.f};
+
+  std::list<Node> nodes;
 
   void UpdateCanvas() {
     ImGuiIO &io = ImGui::GetIO();
@@ -42,15 +56,21 @@ class NodeGraph {
       draw_list->AddLine(canvas_p0 + ImVec2{0, y},
                          canvas_p0 + ImVec2{canvas_sz.x, y}, color_foreground);
     }
-    ImGui::InvisibleButton("##", canvas_sz);
-    if (ImGui::IsItemHovered() &&
+    ImGui::PushID(this);
+    ImGui::InvisibleButton("##", canvas_sz, ImGuiButtonFlags_MouseButtonRight);
+    ImGui::PopID();
+    if (ImGui::IsItemActive() &&
         ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
       scrolling += io.MouseDelta;
     }
-    if (ImGui::IsItemHovered() &&
+    if (ImGui::IsItemActive() &&
         ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Right)) {
       scrolling = ImVec2{0, 0};
     }
+  }
+
+  void UpdateNode(Node *node) {
+    // TODO: impl
   }
 
 public:
@@ -63,12 +83,13 @@ public:
 
     UpdateCanvas();
     ImGui::PushClipRect(canvas_p0, canvas_p0 + canvas_sz, true);
+    for (auto &&node : nodes) {
+      UpdateNode(&node);
+    }
     ImGui::PopClipRect();
 
     ImGui::End();
   }
 
-  void NewNode() {
-    // TODO: impl
-  }
+  void NewNode() { nodes.emplace_back(Node{"NewNode", ImVec2{200, 200}}); }
 };
