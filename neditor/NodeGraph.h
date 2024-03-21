@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <list>
+#include <numeric>
 
 #include "imgui.h"
 
@@ -19,6 +20,7 @@ struct Node {
 };
 
 class NodeGraph {
+  constexpr static float padding{4.0f};
   constexpr static float GRID_STEP{64.0f};
 
   constexpr static ImU32 color_background = IM_COL32(50, 50, 50, 255);
@@ -56,21 +58,69 @@ class NodeGraph {
       draw_list->AddLine(canvas_p0 + ImVec2{0, y},
                          canvas_p0 + ImVec2{canvas_sz.x, y}, color_foreground);
     }
-    ImGui::PushID(this);
-    ImGui::InvisibleButton("##", canvas_sz, ImGuiButtonFlags_MouseButtonRight);
-    ImGui::PopID();
-    if (ImGui::IsItemActive() &&
-        ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
+    if (ImGui::IsMouseDragging(ImGuiMouseButton_Right)) {
       scrolling += io.MouseDelta;
     }
-    if (ImGui::IsItemActive() &&
-        ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Right)) {
+    if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Right)) {
       scrolling = ImVec2{0, 0};
     }
   }
 
   void UpdateNode(Node *node) {
     // TODO: impl
+    ImGuiIO &io = ImGui::GetIO();
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+
+    ImVec2 slot_sz = ImGui::CalcTextSize(
+        node->name.c_str(), node->name.c_str() + node->name.size());
+    slot_sz = std::accumulate(
+        node->islots.begin(), node->islots.end(), slot_sz,
+        [](const auto &ret, const auto &slot) {
+          auto sz = ImGui::CalcTextSize(slot.name.c_str(),
+                                        slot.name.c_str() + slot.name.size());
+          sz.x += sz.y;
+          return ImVec2{std::max(ret.x, sz.x), std::max(ret.y, sz.y)};
+        });
+    slot_sz = std::accumulate(
+        node->oslots.begin(), node->oslots.end(), slot_sz,
+        [](const auto &ret, const auto &slot) {
+          auto sz = ImGui::CalcTextSize(slot.name.c_str(),
+                                        slot.name.c_str() + slot.name.size());
+          sz.x += sz.y;
+          return ImVec2{std::max(ret.x, sz.x), std::max(ret.y, sz.y)};
+        });
+
+    auto header_p0 = node->pos;
+    auto title_p0 = header_p0 + padding;
+    auto title_p1 =
+        title_p0 + ImGui::CalcTextSize(node->name.c_str(),
+                                       node->name.c_str() + node->name.size());
+    auto header_p1 = header_p0 + padding * 2 +
+                     ImVec2{slot_sz.x * 2 + padding * 4, slot_sz.y};
+    draw_list->AddRectFilled(header_p0 + scrolling, header_p1 + scrolling,
+                             color_hbackground);
+    draw_list->AddText(title_p0 + scrolling, color_hforeground,
+                       node->name.c_str(),
+                       node->name.c_str() + node->name.size());
+    ImGui::SetCursorScreenPos(header_p0 + scrolling);
+    ImGui::InvisibleButton(node->name.c_str(), header_p1 - header_p0,
+                           ImGuiButtonFlags_MouseButtonLeft);
+    if (ImGui::IsItemActive() &&
+        ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+      node->pos += io.MouseDelta;
+    }
+
+    {
+      // draw islots
+      auto slot_p0 = ImVec2{header_p0.x, header_p1.y};
+      auto cur_pos = slot_p0 + padding;
+      for (const auto &islot : node->islots) {
+        ImGui::SetCursorScreenPos(cur_pos + scrolling);
+        ImGui::SetNextWindowSize(slot_sz);
+        ImGui::RadioButton(islot.name.c_str(), false);
+        cur_pos += ImVec2{0, slot_sz.y + padding};
+      }
+    }
   }
 
 public:
@@ -91,5 +141,8 @@ public:
     ImGui::End();
   }
 
-  void NewNode() { nodes.emplace_back(Node{"NewNode", ImVec2{200, 200}}); }
+  void NewNode() {
+    nodes.emplace_back(
+        Node{"NewNode", ImVec2{200, 200}, {{"demo"}, {"demo1"}}, {}});
+  }
 };
