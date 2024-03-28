@@ -131,8 +131,8 @@ public:
     ImGui::Begin(name);
     ImGui::PopStyleVar(3);
 
-    UpdateCanvas();
     ImGui::PushClipRect(canvas_p0, canvas_p0 + canvas_sz, true);
+    UpdateCanvas();
     for (auto &&node : nodes) {
       UpdateNode(&node);
     }
